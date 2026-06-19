@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
@@ -560,16 +560,24 @@ def subscription_page(
 
 
 @app.get("/admin/login", response_class=HTMLResponse)
-def admin_login_page(request: Request):
+def admin_login_page(
+    request: Request,
+    user: User | None = Depends(get_optional_user),
+):
+    if user and user.role in ("owner", "superadmin"):
+        return RedirectResponse("/admin", status_code=302)
     return templates.TemplateResponse(request, "admin_login.html", {"request": request})
-
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(
     request: Request,
-    user: User = Depends(require_owner),
+    user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
+    if not user:
+        return RedirectResponse("/admin/login", status_code=302)
+    if user.role not in ("owner", "superadmin"):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
     ctx = {"request": request, "user": user}
     if user.role == "superadmin":
         ctx["orgs"] = db.query(Organisation).order_by(Organisation.name).all()

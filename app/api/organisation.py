@@ -19,10 +19,12 @@ router = APIRouter(prefix="/organisation", tags=["organisation"])
 
 @router.get("/profile")
 def get_org_profile(
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ) -> OrganisationProfileResponse:
-    org = db.query(Organisation).filter(Organisation.id == user.organisation_id).first()
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
+    org = db.query(Organisation).filter(Organisation.id == effective_org_id).first()
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return OrganisationProfileResponse.model_validate(org)
@@ -31,10 +33,12 @@ def get_org_profile(
 @router.put("/profile")
 def update_org_profile(
     body: OrganisationProfileUpdate,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ) -> OrganisationProfileResponse:
-    org = db.query(Organisation).filter(Organisation.id == user.organisation_id).first()
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
+    org = db.query(Organisation).filter(Organisation.id == effective_org_id).first()
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     changes = {}
@@ -45,7 +49,7 @@ def update_org_profile(
         changes["region"] = body.region
         org.region = body.region
     if changes:
-        log_audit(db, user.organisation_id, user.id, "profile.updated", "organisation", org.id, changes)
+        log_audit(db, effective_org_id, user.id, "profile.updated", "organisation", org.id, changes)
     db.commit()
     db.refresh(org)
     return OrganisationProfileResponse.model_validate(org)
@@ -53,17 +57,19 @@ def update_org_profile(
 
 @router.get("/settings")
 def get_org_settings(
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ) -> OrganisationSettingsResponse:
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     settings = (
         db.query(OrganisationSettings)
-        .filter(OrganisationSettings.organisation_id == user.organisation_id)
+        .filter(OrganisationSettings.organisation_id == effective_org_id)
         .first()
     )
     if not settings:
         settings = OrganisationSettings(
-            organisation_id=user.organisation_id,
+            organisation_id=effective_org_id,
         )
         db.add(settings)
         db.commit()
@@ -74,16 +80,18 @@ def get_org_settings(
 @router.put("/settings")
 def update_org_settings(
     body: OrganisationSettingsUpdate,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ) -> OrganisationSettingsResponse:
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     settings = (
         db.query(OrganisationSettings)
-        .filter(OrganisationSettings.organisation_id == user.organisation_id)
+        .filter(OrganisationSettings.organisation_id == effective_org_id)
         .first()
     )
     if not settings:
-        settings = OrganisationSettings(organisation_id=user.organisation_id)
+        settings = OrganisationSettings(organisation_id=effective_org_id)
         db.add(settings)
     changes = {}
     if body.vat_registered is not None:
@@ -99,7 +107,7 @@ def update_org_settings(
         changes["default_currency"] = body.default_currency
         settings.default_currency = body.default_currency
     if changes:
-        log_audit(db, user.organisation_id, user.id, "settings.updated", "organisation", settings.organisation_id, changes)
+        log_audit(db, effective_org_id, user.id, "settings.updated", "organisation", settings.organisation_id, changes)
     db.commit()
     db.refresh(settings)
     return OrganisationSettingsResponse.model_validate(settings)

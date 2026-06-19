@@ -38,7 +38,10 @@
 <script>
 async function loadRecon() {
   try {
-    const res = await fetch('/api/subscriptions/payments');
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/subscriptions/payments';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url);
     const payments = await res.json();
     const tbody = document.getElementById('recon-tbody');
     let pending = 0, banked = 0, confirmed = 0;
@@ -79,7 +82,10 @@ async function loadRecon() {
 async function bankConfirm(id) {
   if (!confirm('Mark this payment as received in bank?')) return;
   try {
-    const res = await fetch(`/api/subscriptions/payments/${id}/bank-confirm`, {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = `/api/subscriptions/payments/${id}/bank-confirm`;
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({}),
@@ -92,7 +98,10 @@ async function bankConfirm(id) {
 async function finalConfirm(id) {
   if (!confirm('Fully confirm this payment?')) return;
   try {
-    const res = await fetch(`/api/subscriptions/payments/${id}/confirm`, {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = `/api/subscriptions/payments/${id}/confirm`;
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({}),

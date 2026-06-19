@@ -439,11 +439,9 @@ class TestInviteFlow:
         token = resp.json()["invite_url"].split("token=")[1]
 
         from datetime import datetime, timezone, timedelta
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
         from app.models.invite import InviteToken
-        engine = create_engine("sqlite:///./test_taxi_ops.db", connect_args={"check_same_thread": False})
-        db = sessionmaker(bind=engine)()
+        from tests.conftest import TestSessionLocal
+        db = TestSessionLocal()
         invite = db.query(InviteToken).filter(InviteToken.token == token).first()
         invite.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
         db.commit()

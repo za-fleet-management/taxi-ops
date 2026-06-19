@@ -48,7 +48,10 @@ document.getElementById('org-profile-form').addEventListener('submit', async fun
   const btn = this.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
-    const res = await fetch('/api/organisation/profile', {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/organisation/profile';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({name: this.name.value, region: this.region.value}),
@@ -72,7 +75,10 @@ document.getElementById('org-settings-form').addEventListener('submit', async fu
   const btn = this.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
-    const res = await fetch('/api/organisation/settings', {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/organisation/settings';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -98,9 +104,16 @@ document.getElementById('org-settings-form').addEventListener('submit', async fu
 
 document.addEventListener('DOMContentLoaded', async function loadOrgData() {
   try {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let profileUrl = '/api/organisation/profile';
+    let settingsUrl = '/api/organisation/settings';
+    if (orgId) {
+      profileUrl += '?org_id=' + encodeURIComponent(orgId);
+      settingsUrl += '?org_id=' + encodeURIComponent(orgId);
+    }
     const [profileRes, settingsRes] = await Promise.all([
-      fetch('/api/organisation/profile'),
-      fetch('/api/organisation/settings'),
+      fetch(profileUrl),
+      fetch(settingsUrl),
     ]);
     const profile = await profileRes.json();
     const settings = await settingsRes.json();

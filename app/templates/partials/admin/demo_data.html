@@ -1,4 +1,4 @@
-<div hx-get="/api/seed/status" hx-trigger="load" hx-swap="innerHTML" hx-target="#seed-status-box"></div>
+<div hx-get="/api/seed/status" hx-trigger="load" hx-swap="innerHTML" hx-target="#seed-status-box" hx-vals='js:{"org_id": (document.getElementById("org-form")?.querySelector("[name=org_id]")?.value || "")}'></div>
 
 <div id="seed-status-box"></div>
 
@@ -67,7 +67,10 @@
 <script>
 async function checkSeedStatus() {
   try {
-    const res = await fetch('/api/seed/status');
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/seed/status';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url);
     const data = await res.json();
     const btnLoad = document.getElementById('btn-load-seed');
     const btnClear = document.getElementById('btn-clear-seed');
@@ -92,7 +95,10 @@ async function loadSeedData() {
   btn.disabled = true;
   btn.textContent = 'Loading...';
   try {
-    const res = await fetch('/api/seed/load', { method: 'POST' });
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/seed/load';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, { method: 'POST' });
     const data = await res.json();
     if (res.ok) {
       msg.innerHTML = '<p class="text-green-600 font-medium">' + data.reason + '</p>';
@@ -125,7 +131,10 @@ async function clearSeedData() {
   btn.disabled = true;
   btn.textContent = 'Removing...';
   try {
-    const res = await fetch('/api/seed/clear', { method: 'DELETE' });
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/seed/clear';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url, { method: 'DELETE' });
     const data = await res.json();
     if (res.ok) {
       msg.innerHTML = '<p class="text-green-600 font-medium">Data cleared. You can now load fresh demo data.</p>';

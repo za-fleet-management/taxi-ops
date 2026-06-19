@@ -48,6 +48,8 @@ async function loadAuditLog() {
   if (entity) params.set('entity_type', entity);
 
   try {
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    if (orgId) params.set('org_id', orgId);
     const res = await fetch('/api/admin/audit-log?' + params.toString());
     const data = await res.json();
     const tbody = document.getElementById('audit-tbody');

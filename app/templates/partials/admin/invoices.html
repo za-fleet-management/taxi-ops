@@ -1,4 +1,4 @@
-<div hx-get="/api/subscriptions/invoices" hx-trigger="load" hx-swap="innerHTML" hx-target="#invoice-table-body"></div>
+<div hx-get="/api/subscriptions/invoices" hx-trigger="load" hx-swap="innerHTML" hx-target="#invoice-table-body" hx-vals='js:{"org_id": (document.getElementById("org-form")?.querySelector("[name=org_id]")?.value || "")}'></div>
 
 <div class="card-modern overflow-x-auto">
   <h2 class="text-lg font-semibold mb-3 px-5 pt-5">Invoices</h2>
@@ -22,22 +22,28 @@
 <script>
 async function loadInvoices() {
   try {
-    const res = await fetch('/api/subscriptions/invoices');
+    const orgId = document.getElementById('org-form')?.querySelector('[name=org_id]')?.value || '';
+    let url = '/api/subscriptions/invoices';
+    if (orgId) url += '?org_id=' + encodeURIComponent(orgId);
+    const res = await fetch(url);
     const invoices = await res.json();
     const tbody = document.getElementById('invoice-table-body');
     if (invoices.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-4">No invoices yet</td></tr>';
       return;
     }
-    tbody.innerHTML = invoices.map(inv => `
+    tbody.innerHTML = invoices.map(inv => {
+      let pdfUrl = '/api/subscriptions/invoices/' + inv.payment_id + '/pdf';
+      if (orgId) pdfUrl += '?org_id=' + encodeURIComponent(orgId);
+      return `
       <tr>
         <td class="font-mono text-xs font-semibold">${inv.invoice_number}</td>
         <td>${inv.payment_date}</td>
         <td class="text-right">R ${(inv.amount_cents / 100).toLocaleString()}</td>
         <td class="font-mono text-xs">${inv.reference}</td>
-        <td><a href="/api/subscriptions/invoices/${inv.payment_id}/pdf" class="text-blue-600 hover:underline text-xs" target="_blank">Download PDF</a></td>
+        <td><a href="${pdfUrl}" class="text-blue-600 hover:underline text-xs" target="_blank">Download PDF</a></td>
       </tr>
-    `).join('');
+    `}).join('');
   } catch {}
 }
 loadInvoices();

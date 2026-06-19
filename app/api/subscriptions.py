@@ -41,10 +41,12 @@ def _add_months(source: date, months: int) -> date:
 
 @router.get("/current")
 def current_subscription(
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
-    sub = _get_sub(db, user.organisation_id)
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
+    sub = _get_sub(db, effective_org_id)
     if not sub:
         return None
     today = date.today()
@@ -68,15 +70,17 @@ def current_subscription(
 @router.post("/quote")
 def get_quote(
     body: PlanQuoteRequest,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
     if body.plan_months not in ALLOWED_PLANS:
         raise HTTPException(status_code=400, detail="Plan must be 1, 3, 6, or 12 months")
 
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     taxi_count = (
         db.query(Taxi)
-        .filter(Taxi.organisation_id == user.organisation_id, Taxi.status == "active")
+        .filter(Taxi.organisation_id == effective_org_id, Taxi.status == "active")
         .count()
     )
     ppc = price_per_taxi_cents(body.plan_months)
@@ -94,17 +98,18 @@ def get_quote(
 @router.post("/payments")
 def record_payment(
     body: PaymentCreate,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
     if body.plan_months not in ALLOWED_PLANS:
         raise HTTPException(status_code=400, detail="Plan must be 1, 3, 6, or 12 months")
 
-    org_id = user.organisation_id
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
 
     taxi_count = (
         db.query(Taxi)
-        .filter(Taxi.organisation_id == org_id, Taxi.status == "active")
+        .filter(Taxi.organisation_id == effective_org_id, Taxi.status == "active")
         .count()
     )
     ppc = price_per_taxi_cents(body.plan_months)
@@ -116,7 +121,7 @@ def record_payment(
             detail=f"Amount too low. Expected at least R {expected // 100:,} for {taxi_count} taxi(s)",
         )
 
-    sub = _get_sub(db, org_id)
+    sub = _get_sub(db, effective_org_id)
     today = date.today()
 
     if sub and sub.status == "active" and sub.period_end >= today:
@@ -128,7 +133,7 @@ def record_payment(
 
     if not sub:
         sub = OrganisationSubscription(
-            organisation_id=org_id,
+            organisation_id=effective_org_id,
             plan_months=body.plan_months,
             price_per_taxi_cents=ppc,
             taxi_count=taxi_count,
@@ -149,7 +154,7 @@ def record_payment(
         sub.status = "active"
 
     payment = SubscriptionPayment(
-        organisation_id=org_id,
+        organisation_id=effective_org_id,
         subscription_id=sub.id,
         amount_cents=body.amount_cents,
         reference=body.reference,
@@ -160,7 +165,7 @@ def record_payment(
     db.add(payment)
     db.flush()
 
-    log_audit(db, org_id, user.id, "payment.recorded", "payment", payment.id, {
+    log_audit(db, effective_org_id, user.id, "payment.recorded", "payment", payment.id, {
         "amount_cents": body.amount_cents,
         "reference": body.reference,
         "plan_months": body.plan_months,
@@ -179,12 +184,14 @@ def record_payment(
 
 @router.get("/payments")
 def list_payments(
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     payments = (
         db.query(SubscriptionPayment)
-        .filter(SubscriptionPayment.organisation_id == user.organisation_id)
+        .filter(SubscriptionPayment.organisation_id == effective_org_id)
         .order_by(SubscriptionPayment.created_at.desc())
         .all()
     )
@@ -206,14 +213,16 @@ def list_payments(
 def confirm_payment(
     payment_id: str,
     body: PaymentConfirm,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     payment = (
         db.query(SubscriptionPayment)
         .filter(
             SubscriptionPayment.id == payment_id,
-            SubscriptionPayment.organisation_id == user.organisation_id,
+            SubscriptionPayment.organisation_id == effective_org_id,
         )
         .first()
     )
@@ -224,7 +233,7 @@ def confirm_payment(
     payment.confirmed_by = user.id
     payment.confirmed_at = datetime.now(timezone.utc)
     payment.notes = body.notes or payment.notes
-    log_audit(db, user.organisation_id, user.id, "payment.confirmed", "payment", payment.id, {
+    log_audit(db, effective_org_id, user.id, "payment.confirmed", "payment", payment.id, {
         "amount_cents": payment.amount_cents,
         "reference": payment.reference,
     })
@@ -237,14 +246,16 @@ def confirm_payment(
 def bank_confirm_payment(
     payment_id: str,
     body: PaymentConfirm,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     payment = (
         db.query(SubscriptionPayment)
         .filter(
             SubscriptionPayment.id == payment_id,
-            SubscriptionPayment.organisation_id == user.organisation_id,
+            SubscriptionPayment.organisation_id == effective_org_id,
         )
         .first()
     )
@@ -255,7 +266,7 @@ def bank_confirm_payment(
     payment.bank_confirmed_by = user.id
     payment.bank_confirmed_at = datetime.now(timezone.utc)
     payment.notes = body.notes or payment.notes
-    log_audit(db, user.organisation_id, user.id, "payment.bank_confirmed", "payment", payment.id, {
+    log_audit(db, effective_org_id, user.id, "payment.bank_confirmed", "payment", payment.id, {
         "amount_cents": payment.amount_cents,
         "reference": payment.reference,
     })
@@ -266,13 +277,15 @@ def bank_confirm_payment(
 
 @router.get("/invoices")
 def list_invoices(
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     payments = (
         db.query(SubscriptionPayment)
         .filter(
-            SubscriptionPayment.organisation_id == user.organisation_id,
+            SubscriptionPayment.organisation_id == effective_org_id,
             SubscriptionPayment.confirmed == True,
         )
         .order_by(SubscriptionPayment.payment_date.desc())
@@ -280,7 +293,7 @@ def list_invoices(
     )
     sub = (
         db.query(OrganisationSubscription)
-        .filter(OrganisationSubscription.organisation_id == user.organisation_id)
+        .filter(OrganisationSubscription.organisation_id == effective_org_id)
         .first()
     )
     return [
@@ -301,16 +314,18 @@ def list_invoices(
 @router.get("/invoices/{payment_id}/pdf")
 def download_invoice_pdf(
     payment_id: str,
+    org_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ):
     from app.services.invoice_pdf import generate_invoice_pdf
 
+    effective_org_id = org_id if (user.role == "superadmin" and org_id) else user.organisation_id
     payment = (
         db.query(SubscriptionPayment)
         .filter(
             SubscriptionPayment.id == payment_id,
-            SubscriptionPayment.organisation_id == user.organisation_id,
+            SubscriptionPayment.organisation_id == effective_org_id,
         )
         .first()
     )
@@ -321,15 +336,15 @@ def download_invoice_pdf(
     from app.models.organisation_settings import OrganisationSettings
     from app.models.subscription import OrganisationSubscription
 
-    org = db.query(Organisation).filter(Organisation.id == user.organisation_id).first()
+    org = db.query(Organisation).filter(Organisation.id == effective_org_id).first()
     settings = (
         db.query(OrganisationSettings)
-        .filter(OrganisationSettings.organisation_id == user.organisation_id)
+        .filter(OrganisationSettings.organisation_id == effective_org_id)
         .first()
     )
     sub = (
         db.query(OrganisationSubscription)
-        .filter(OrganisationSubscription.organisation_id == user.organisation_id)
+        .filter(OrganisationSubscription.organisation_id == effective_org_id)
         .first()
     )
 

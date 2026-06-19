@@ -1,72 +1,220 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TaxiOps — Administration{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/offline.js" defer></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 text-gray-900">
 
-{% block title %}TaxiOps — Administration{% endblock %}
+<div id="toast-container" class="toast-container"></div>
 
-{% block content %}
-<div class="mb-6">
-  <h1 class="text-2xl font-bold text-gray-900">Administration</h1>
-  <p class="text-sm text-gray-500 mt-1">Manage your organisation, subscriptions, and team</p>
-</div>
+<div class="min-h-screen lg:flex admin-shell">
+  <aside class="hidden lg:flex lg:flex-col w-80 bg-white border-r border-gray-200 admin-sidebar">
+    <div class="p-6 border-b border-gray-200">
+      <p class="text-xs font-semibold tracking-[0.18em] uppercase text-blue-600">Standalone admin</p>
+      <h1 class="mt-1 text-2xl font-bold text-gray-900">TaxiOps Admin</h1>
+      <p class="mt-2 text-sm text-gray-500">Organisation, billing, reconciliation, and audit controls.</p>
+    </div>
 
-{% if orgs %}
-<form id="org-form" class="mb-4">
-  <div class="flex items-center gap-3">
-    <label class="text-sm font-medium text-gray-700">Organisation:</label>
-    <select name="org_id" class="select select-bordered select-sm max-w-xs"
-      onchange="this.form.dispatchEvent(new Event('change', {bubbles:true}))">
-      {% for org in orgs %}
-      <option value="{{ org.id }}">{{ org.name }}</option>
-      {% endfor %}
-    </select>
+    <div class="p-4 border-b border-gray-200">
+      <div class="rounded-xl border border-gray-200 bg-slate-50 p-3">
+        <label for="org-select" class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Organisation</label>
+        {% if orgs %}
+        <form id="org-form">
+          <select id="org-select" name="org_id"
+            class="select select-bordered select-sm w-full bg-white text-gray-900 border-gray-300"
+            onchange="this.form.dispatchEvent(new Event('change', {bubbles:true}))">
+            {% for org in orgs %}
+            <option value="{{ org.id }}">{{ org.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% else %}
+        <div class="text-sm text-gray-500">Current organisation only</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <nav class="flex-1 p-3 space-y-4 overflow-y-auto" id="admin-tabs" aria-label="Administration sections">
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Overview</p>
+        <button class="admin-tab active w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold bg-blue-50 text-blue-700"
+          hx-get="/partials/admin/dashboard" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </button>
+      </div>
+
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Organisation</p>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/settings" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Organisation Settings
+        </button>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/reconciliation" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Reconciliation
+        </button>
+      </div>
+
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Finance</p>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/billing" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Billing
+        </button>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/invoices" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+          Invoices
+        </button>
+      </div>
+
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Governance</p>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/audit-log" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m0-4h.01M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>
+          Audit Log
+        </button>
+        <button class="admin-tab w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          hx-get="/partials/admin/demo-data" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          Demo Data
+        </button>
+      </div>
+    </nav>
+
+    <div class="p-4 border-t border-gray-200">
+      <button type="button"
+        class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+        onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>window.location='/admin/login')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <div class="flex min-h-screen flex-1 flex-col">
+    <header class="lg:hidden bg-white border-b border-gray-200">
+      <div class="px-4 h-16 flex items-center justify-between gap-3">
+        <button type="button" class="p-2 rounded-lg border border-gray-200 text-gray-700" onclick="document.getElementById('admin-mobile-shell').classList.toggle('hidden')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold tracking-[0.18em] uppercase text-blue-600">Standalone admin</p>
+          <h1 class="text-base font-bold text-gray-900 truncate">TaxiOps Admin</h1>
+        </div>
+        <button type="button" class="p-2 rounded-lg border border-gray-200 text-gray-700"
+          onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>window.location='/admin/login')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <div class="max-w-7xl mx-auto px-4 md:px-8 py-6">
+        <div id="admin-mobile-shell" class="hidden lg:hidden mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="mb-4 rounded-xl border border-gray-200 bg-slate-50 p-3">
+            <label for="org-select-mobile" class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Organisation</label>
+            {% if orgs %}
+            <form id="org-form-mobile">
+              <select id="org-select-mobile" name="org_id" class="select select-bordered select-sm w-full bg-white text-gray-900 border-gray-300"
+                onchange="this.form.dispatchEvent(new Event('change', {bubbles:true}))">
+                {% for org in orgs %}
+                <option value="{{ org.id }}">{{ org.name }}</option>
+                {% endfor %}
+              </select>
+            </form>
+            {% else %}
+            <div class="text-sm text-gray-500">Current organisation only</div>
+            {% endif %}
+          </div>
+          <div class="grid grid-cols-2 gap-2" id="admin-tabs-mobile">
+            <button class="admin-tab-mobile active rounded-xl px-3 py-2 text-left text-sm font-semibold bg-blue-50 text-blue-700"
+              hx-get="/partials/admin/dashboard" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Dashboard</button>
+            <button class="admin-tab-mobile rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/settings" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Settings</button>
+            <button class="admin-tab-mobile rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/billing" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Billing</button>
+            <button class="admin-tab-mobile rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/reconciliation" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Reconciliation</button>
+            <button class="admin-tab-mobile rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/invoices" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Invoices</button>
+            <button class="admin-tab-mobile rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/audit-log" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Audit Log</button>
+            <button class="admin-tab-mobile col-span-2 rounded-xl px-3 py-2 text-left text-sm font-semibold bg-gray-50 text-gray-700"
+              hx-get="/partials/admin/demo-data" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form-mobile"{% endif %}>Demo Data</button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Administration</p>
+                <h2 class="text-xl font-bold text-gray-900">Manage platform operations</h2>
+              </div>
+              {% if orgs %}
+              <div class="lg:hidden text-sm text-gray-500">Use the menu above to switch sections.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div id="admin-content" class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden" hx-get="/partials/admin/dashboard" hx-trigger="load" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+            <div class="text-center py-12 text-gray-400">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
-</form>
-{% endif %}
-
-<div class="mb-6 border-b border-gray-200">
-  <nav class="flex gap-6 overflow-x-auto text-sm font-medium" id="admin-tabs">
-    <button class="admin-tab active pb-3 border-b-2 border-blue-600 text-blue-600" hx-get="/partials/admin/dashboard" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Dashboard
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/settings" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Organisation Settings
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/billing" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Billing
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/reconciliation" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Reconciliation
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/invoices" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Invoices
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/audit-log" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Audit Log
-    </button>
-    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/demo-data" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-      Demo Data
-    </button>
-  </nav>
-</div>
-
-<div id="admin-content" hx-get="/partials/admin/dashboard" hx-trigger="load" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
-  <div class="text-center py-12 text-gray-400">Loading...</div>
 </div>
 
 <script>
 (function() {
   var tabs = document.getElementById('admin-tabs');
+  var mobileTabs = document.getElementById('admin-tabs-mobile');
   var orgForm = document.getElementById('org-form');
+  var orgFormMobile = document.getElementById('org-form-mobile');
 
   tabs.addEventListener('click', function(e) {
-    if (e.target.classList.contains('admin-tab')) {
+    var button = e.target.closest('.admin-tab');
+    if (button) {
       document.querySelectorAll('.admin-tab').forEach(function(t) {
-        t.classList.remove('active', 'border-blue-600', 'text-blue-600');
-        t.classList.add('text-gray-500');
+        t.classList.remove('active', 'bg-blue-50', 'text-blue-700');
+        t.classList.add('text-gray-600');
       });
-      e.target.classList.add('active', 'border-blue-600', 'text-blue-600');
-      e.target.classList.remove('text-gray-500');
+      button.classList.add('active', 'bg-blue-50', 'text-blue-700');
+      button.classList.remove('text-gray-600');
     }
   });
+
+  if (mobileTabs) {
+    mobileTabs.addEventListener('click', function(e) {
+      var button = e.target.closest('.admin-tab-mobile');
+      if (button) {
+        document.querySelectorAll('.admin-tab-mobile').forEach(function(t) {
+          t.classList.remove('active', 'bg-blue-50', 'text-blue-700');
+          t.classList.add('bg-gray-50', 'text-gray-700');
+        });
+        button.classList.add('active', 'bg-blue-50', 'text-blue-700');
+        button.classList.remove('bg-gray-50', 'text-gray-700');
+      }
+    });
+  }
 
   if (orgForm) {
     orgForm.addEventListener('change', function() {
@@ -76,6 +224,16 @@
       }
     });
   }
+
+  if (orgFormMobile) {
+    orgFormMobile.addEventListener('change', function() {
+      var firstTabMobile = mobileTabs ? mobileTabs.querySelector('.admin-tab-mobile') : null;
+      if (firstTabMobile) {
+        firstTabMobile.click();
+      }
+    });
+  }
 })();
 </script>
-{% endblock %}
+</body>
+</html>
