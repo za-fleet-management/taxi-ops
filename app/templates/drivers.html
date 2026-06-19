@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Drivers</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage your driver roster</p>
+  </div>
+  {% if user.role in ["owner", "dispatcher"] %}
+  <button class="btn-modern btn-primary-modern" onclick="document.getElementById('add-modal').showModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Driver
+  </button>
+  {% endif %}
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">New Driver</h3>
+    <form id="driver-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="dname" class="input-modern" placeholder="Full name" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input type="tel" id="dphone" class="input-modern" placeholder="+27 12 345 6789" required>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Driver</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('driver-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/drivers', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('dname').value,
+          phone: document.getElementById('dphone').value,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('driver-form').reset();
+          htmx.trigger('#driver-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save driver'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<dialog id="edit-driver-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit Driver</h3>
+    <form id="edit-driver-form" class="space-y-4">
+      <input type="hidden" id="edit-driver-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="edit-driver-name" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input type="tel" id="edit-driver-phone" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned Taxi</label>
+        <select id="edit-driver-taxi" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select id="edit-driver-status" class="input-modern">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-driver-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditDriverModal(driverId, name, phone, assignedTaxiId, status) {
+      document.getElementById('edit-driver-id').value = driverId;
+      document.getElementById('edit-driver-name').value = name;
+      document.getElementById('edit-driver-phone').value = phone;
+      document.getElementById('edit-driver-status').value = status;
+      fetch('/api/taxis').then(r => r.json()).then(taxis => {
+        const select = document.getElementById('edit-driver-taxi');
+        select.innerHTML = '<option value="">— None —</option>';
+        taxis.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.registration_number + ' (' + t.model + ')';
+          if (t.id === assignedTaxiId) opt.selected = true;
+          select.appendChild(opt);
+        });
+      });
+      document.getElementById('edit-driver-modal').showModal();
+    }
+    document.getElementById('edit-driver-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const driverId = document.getElementById('edit-driver-id').value;
+      const taxiVal = document.getElementById('edit-driver-taxi').value;
+      fetch('/api/drivers/' + driverId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('edit-driver-name').value,
+          phone: document.getElementById('edit-driver-phone').value,
+          assigned_taxi_id: taxiVal || null,
+          status: document.getElementById('edit-driver-status').value,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-driver-modal').close();
+          showToast('Driver updated successfully', 'success');
+          htmx.trigger('#driver-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update driver', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="driver-list">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Assigned Taxi</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/drivers" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="5" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

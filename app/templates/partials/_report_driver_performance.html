@@ -1,0 +1,28 @@
+{% if items %}
+<div class="overflow-x-auto">
+  <table class="table-modern">
+    <thead>
+      <tr>
+        <th>Driver</th>
+        <th>Route</th>
+        <th class="text-right">Total Income</th>
+        <th class="text-right">Days Active</th>
+        <th class="text-right">Idle Days</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td class="font-medium">{{ item.driver_name }}</td>
+        <td>{{ item.route_name }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_income_cents / 100) }}</td>
+        <td class="text-right">{{ item.income_days }}</td>
+        <td class="text-right">{{ item.idle_days }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-sm text-gray-400 py-4 text-center">No driver performance data.</p>
+{% endif %}

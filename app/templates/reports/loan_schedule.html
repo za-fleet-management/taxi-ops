@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Loan Schedule &amp; Forecast</h1>
+  <p class="text-sm text-gray-500 mt-1">Per-loan balances, payments and projected pay-off dates</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {{ kpi_card('Total Outstanding', data.total_outstanding_cents, colour='red') }}
+  {{ kpi_card('Total Original', data.total_original_cents, colour='blue') }}
+  {{ kpi_card('Total Paid to Date', data.total_paid_cents, colour='green') }}
+</div>
+
+{{ chart_canvas('loanChart', 300) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Taxi</th>
+        <th class="text-right">Original Amount</th>
+        <th class="text-right">Remaining Balance</th>
+        <th class="text-right">Monthly Instalment</th>
+        <th class="text-right">Payments Made</th>
+        <th class="text-right">Total Paid</th>
+        <th class="text-right">Remaining Payments</th>
+        <th>Projected Pay-off</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.taxi_registration }}</td>
+        <td class="text-right">{{ money(item.total_amount_cents) }}</td>
+        <td class="text-right">{{ money(item.remaining_balance_cents) }}</td>
+        <td class="text-right">{{ money(item.monthly_instalment_cents) if item.monthly_instalment_cents else '—' }}</td>
+        <td class="text-right">{{ item.payments_made }}</td>
+        <td class="text-right">{{ money(item.total_paid_to_date_cents) }}</td>
+        <td class="text-right">{{ item.remaining_payments }}</td>
+        <td>{{ item.projected_pay_off_date if item.projected_pay_off_date else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function() {
+  const items = {{ items_json | tojson }};
+  new Chart(document.getElementById('loanChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: items.map(i => i.taxi_registration),
+      datasets: [
+        { label: 'Original Amount', data: items.map(i => i.total_amount_cents / 100), backgroundColor: '#2563eb' },
+        { label: 'Remaining Balance', data: items.map(i => i.remaining_balance_cents / 100), backgroundColor: '#dc2626' },
+        { label: 'Paid to Date', data: items.map(i => i.total_paid_to_date_cents / 100), backgroundColor: '#16a34a' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Loan Balances per Taxi' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% if loans %}
+{% for loan in loans %}
+<tr>
+  <td>{{ taxi_map.get(loan.taxi_id, '—') }}</td>
+  <td class="font-medium">{{ loan.lender }}</td>
+  <td>R{{ '%.2f' | format(loan.total_amount_cents / 100) }}</td>
+  <td>R{{ '%.2f' | format(loan.remaining_balance_cents / 100) }}</td>
+  <td>R{{ '%.2f' | format(loan.monthly_instalment_cents / 100) }}/mo</td>
+  <td>
+    <a href="/loans/{{ loan.id }}/payments" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Payments</a>
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="6" class="text-center text-gray-400 py-8">No loans yet.</td></tr>
+{% endif %}

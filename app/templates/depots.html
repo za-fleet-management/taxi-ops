@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Depots</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage your fleet depots, workshops and parking locations</p>
+  </div>
+  <button class="btn-modern btn-primary-modern" onclick="document.getElementById('add-modal').showModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Depot
+  </button>
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">New Depot</h3>
+    <form id="depot-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="dname" class="input-modern" placeholder="e.g. Thohoyandou Workshop" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <select id="dtype" class="input-modern">
+          <option value="mixed">Mixed (parking + workshop)</option>
+          <option value="parking">Parking only</option>
+          <option value="workshop">Workshop only</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+        <input type="text" id="daddress" class="input-modern" placeholder="Optional">
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Depot</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('depot-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/depots', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('dname').value,
+          depot_type: document.getElementById('dtype').value,
+          address: document.getElementById('daddress').value || null,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('depot-form').reset();
+          htmx.trigger('#depot-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save depot'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<dialog id="edit-depot-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit Depot</h3>
+    <form id="edit-depot-form" class="space-y-4">
+      <input type="hidden" id="edit-depot-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="edit-depot-name" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <select id="edit-depot-type" class="input-modern">
+          <option value="mixed">Mixed</option>
+          <option value="parking">Parking only</option>
+          <option value="workshop">Workshop only</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+        <input type="text" id="edit-depot-address" class="input-modern">
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-depot-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditDepotModal(id, name, type, address) {
+      document.getElementById('edit-depot-id').value = id;
+      document.getElementById('edit-depot-name').value = name;
+      document.getElementById('edit-depot-type').value = type;
+      document.getElementById('edit-depot-address').value = address || '';
+      document.getElementById('edit-depot-modal').showModal();
+    }
+    document.getElementById('edit-depot-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const depotId = document.getElementById('edit-depot-id').value;
+      fetch('/api/depots/' + depotId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('edit-depot-name').value,
+          depot_type: document.getElementById('edit-depot-type').value,
+          address: document.getElementById('edit-depot-address').value || null,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-depot-modal').close();
+          showToast('Depot updated successfully', 'success');
+          htmx.trigger('#depot-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update depot', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="depot-list">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/depots" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="4" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

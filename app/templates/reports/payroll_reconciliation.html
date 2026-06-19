@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Payroll Reconciliation</h1>
+  <p class="text-sm text-gray-500 mt-1">Salary owed vs salary paid for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/payroll-reconciliation', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {{ kpi_card('Total Salary Owed', data.total_owed_cents, colour='blue') }}
+  {{ kpi_card('Total Salary Paid', data.total_paid_cents, colour='green') }}
+  {{ kpi_card('Outstanding Liability', data.total_liability_cents, colour='red') }}
+</div>
+
+{{ chart_canvas('payrollChart', 300) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Employee</th>
+        <th>Package</th>
+        <th>Frequency</th>
+        <th class="text-right">Days Employed</th>
+        <th class="text-right">Owed</th>
+        <th class="text-right">Paid</th>
+        <th class="text-right">Balance</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.driver_name }}</td>
+        <td>{{ item.package_name or '—' }}</td>
+        <td>{{ item.payment_frequency or '—' }}</td>
+        <td class="text-right">{{ item.days_employed }}</td>
+        <td class="text-right">{{ money(item.salary_owed_cents) }}</td>
+        <td class="text-right">{{ money(item.salary_paid_cents) }}</td>
+        <td class="text-right font-semibold {% if item.salary_balance_cents > 0 %}text-red-600{% else %}text-green-600{% endif %}">{{ money(item.salary_balance_cents) }}</td>
+        <td><span class="badge-modern {% if item.employment_status == 'active' %}badge-active{% else %}badge-breakdown{% endif %}">{{ item.employment_status }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function() {
+  const items = {{ items_json | tojson }};
+  new Chart(document.getElementById('payrollChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: items.map(i => i.driver_name),
+      datasets: [
+        { label: 'Owed', data: items.map(i => i.salary_owed_cents / 100), backgroundColor: '#2563eb' },
+        { label: 'Paid', data: items.map(i => i.salary_paid_cents / 100), backgroundColor: '#16a34a' },
+        { label: 'Balance', data: items.map(i => i.salary_balance_cents / 100), backgroundColor: '#dc2626' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Salary Owed vs Paid per Employee' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

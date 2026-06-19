@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}TaxiOps — Platform Administration{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Platform Administration</h1>
+  <p class="text-sm text-gray-500 mt-1">Manage all organisations and platform-wide settings</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+  <div class="stat-card">
+    <p class="stat-label">Organisations</p>
+    <p class="stat-value">{{ org_count }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Users</p>
+    <p class="stat-value">{{ total_users }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Your Role</p>
+    <p class="stat-value text-amber-600">Superadmin</p>
+  </div>
+</div>
+
+<div class="card-modern">
+  <div class="card-header">
+    <h2 class="text-lg font-semibold text-gray-900">All Organisations</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="text-left">Name</th>
+          <th class="text-left">Region</th>
+          <th class="text-left">Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for org in orgs %}
+        <tr class="hover:bg-gray-50">
+          <td class="font-medium text-gray-900">{{ org.name }}</td>
+          <td class="text-gray-600">{{ org.region }}</td>
+          <td class="text-gray-500 text-sm">{{ org.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+        {% endfor %}
+        {% if not orgs %}
+        <tr><td colspan="3" class="text-center text-gray-400 py-8">No organisations yet</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

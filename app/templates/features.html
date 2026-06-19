@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Features — TaxiOps{% endblock %}
+{% block content %}
+<section class="pt-32 pb-20 bg-white">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <p class="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">Features</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Everything you need to run your fleet</h1>
+      <p class="text-gray-500 text-lg max-w-2xl mx-auto">Purpose-built for South African taxi operators. No complexity, just the tools that matter.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Income Tracking</h3>
+        <p class="text-gray-500 text-sm">Log daily earnings per taxi in seconds. One entry per taxi per day with driver attribution.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Fuel Management</h3>
+        <p class="text-gray-500 text-sm">Record every fuel purchase with litres, cost, and odometer readings. Know your fuel efficiency.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Breakdown Tracking</h3>
+        <p class="text-gray-500 text-sm">Log breakdowns with timestamps, reasons, and parts used. Track downtime costs automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Driver Management</h3>
+        <p class="text-gray-500 text-sm">Manage drivers, assign them to taxis, track performance and idle days across your fleet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Fleet Reports</h3>
+        <p class="text-gray-500 text-sm">Income summaries, cost of operations, driver performance, and route profitability — all in one place.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Route Profitability</h3>
+        <p class="text-gray-500 text-sm">Tag income entries to routes and see which routes are profitable. Make data-driven route decisions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Role-Based Access</h3>
+        <p class="text-gray-500 text-sm">Owners control everything. Managers can log data. Your data stays isolated and secure per organisation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Works Offline</h3>
+        <p class="text-gray-500 text-sm">Entries queue locally when you're off-grid and sync automatically when connectivity returns.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Secure by Design</h3>
+        <p class="text-gray-500 text-sm">JWT-based authentication with bcrypt password hashing. Multi-tenant isolation built from day one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Log Fuel Purchase</h1>
+    <p class="text-sm text-gray-500 mt-1">Record a fuel purchase for a taxi</p>
+  </div>
+  <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <form id="fuel-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="taxi_id" class="input-modern" required>
+          <option value="">Select a taxi</option>
+          {% for t in taxis %}
+          <option value="{{ t.id }}">{{ t.registration_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+        <input type="date" id="date" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Litres</label>
+        <input type="number" step="0.01" id="litres" class="input-modern" placeholder="e.g. 45.5" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Cost (cents)</label>
+        <input type="number" id="cost_total" class="input-modern" placeholder="e.g. 45500 = R455" required>
+        <p class="text-xs text-gray-400 mt-1">Amount in cents. R455 = 45500</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Odometer (km)</label>
+        <input type="number" id="odometer_km" class="input-modern" placeholder="Optional">
+      </div>
+      <div id="result"></div>
+      <button type="submit" class="btn-modern btn-primary-modern w-full">Save Fuel Entry</button>
+    </form>
+  </div>
+</div>
+<script>
+document.getElementById('fuel-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const body = JSON.stringify({
+    taxi_id: document.getElementById('taxi_id').value,
+    date: document.getElementById('date').value,
+    litres: parseFloat(document.getElementById('litres').value) || 0,
+    cost_total: parseInt(document.getElementById('cost_total').value) || 0,
+    odometer_km: parseInt(document.getElementById('odometer_km').value) || null,
+  });
+  fetch('/api/fuel', { method:'POST', headers:{'Content-Type':'application/json'}, body })
+    .then(r => {
+      if (r.ok) {
+        document.getElementById('fuel-form').reset();
+        document.getElementById('result').innerHTML = '<div class="text-sm text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg p-3">Fuel entry saved</div>';
+      } else {
+        document.getElementById('result').innerHTML = '<div class="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg p-3">Failed to save fuel entry</div>';
+      }
+    });
+});
+</script>
+{% endblock %}

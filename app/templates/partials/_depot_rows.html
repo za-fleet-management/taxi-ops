@@ -1,0 +1,14 @@
+{% if depots %}
+{% for depot in depots %}
+<tr>
+  <td class="font-medium">{{ depot.name }}</td>
+  <td><span class="badge-modern badge-active">{{ depot.depot_type }}</span></td>
+  <td>{{ depot.address or '—' }}</td>
+  <td>
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditDepotModal('{{ depot.id }}', '{{ depot.name }}', '{{ depot.depot_type }}', '{{ depot.address or '' }}')">Edit</button>
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="4" class="text-center text-gray-400 py-8">No depots yet. Add your first depot above.</td></tr>
+{% endif %}

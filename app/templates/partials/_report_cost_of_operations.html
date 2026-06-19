@@ -1,0 +1,38 @@
+{% if items %}
+<div class="overflow-x-auto">
+  <table class="table-modern">
+    <thead>
+      <tr>
+        <th>Taxi</th>
+        <th class="text-right">Income</th>
+        <th class="text-right">Fuel</th>
+        <th class="text-right">Breakdown</th>
+        <th class="text-right">Insurance</th>
+        <th class="text-right">Loan</th>
+        <th class="text-right">Spare Parts</th>
+        <th class="text-right">Mechanic</th>
+        <th class="text-right">Ops Cost</th>
+        <th class="text-right">Net Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td class="font-medium">{{ item.registration_number }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_income / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_fuel_cost / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_breakdown_cost / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_insurance_cost / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_loan_payment_cost / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_spare_part_cost / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_mechanic_payment_cost / 100) }}</td>
+        <td class="text-right font-medium">R{{ '%.2f' | format(item.cost_of_operations / 100) }}</td>
+        <td class="text-right font-semibold {% if item.net_position >= 0 %}text-green-600{% else %}text-red-600{% endif %}">R{{ '%.2f' | format(item.net_position / 100) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-sm text-gray-400 py-4 text-center">No operations data for the selected period.</p>
+{% endif %}

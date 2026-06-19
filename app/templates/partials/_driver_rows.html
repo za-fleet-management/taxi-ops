@@ -1,0 +1,17 @@
+{% if drivers %}
+{% for driver in drivers %}
+<tr>
+  <td class="font-medium">{{ driver.name }}</td>
+  <td>{{ driver.phone }}</td>
+  <td><span class="badge-modern {% if driver.status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">{{ driver.status }}</span></td>
+  <td>{{ taxi_map.get(driver.assigned_taxi_id, '—') }}</td>
+  <td>
+    {% if user.role in ["owner", "dispatcher"] %}
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditDriverModal('{{ driver.id }}', '{{ driver.name }}', '{{ driver.phone }}', '{{ driver.assigned_taxi_id or '' }}', '{{ driver.status }}')">Edit</button>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="5" class="text-center text-gray-400 py-8">No drivers yet. Add your first driver above.</td></tr>
+{% endif %}

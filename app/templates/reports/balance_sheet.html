@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Balance Sheet Summary</h1>
+  <p class="text-sm text-gray-500 mt-1">Snapshot as at {{ data.as_at }}</p>
+</div>
+
+<form class="flex flex-wrap items-end gap-3 mb-6" onsubmit="return false;">
+  <div>
+    <label class="block text-xs font-medium text-gray-500 mb-1">As at</label>
+    <input type="date" id="bs-date" value="{{ data.as_at }}" class="input-modern">
+  </div>
+  <button type="button" class="btn-modern btn-primary-modern" onclick="loadBalanceSheet()">Update</button>
+</form>
+<script>
+function loadBalanceSheet() {
+  const d = document.getElementById('bs-date').value;
+  window.location.href = '/reports/balance-sheet?as_at=' + d;
+}
+</script>
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern">
+    <tbody>
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Assets</td>
+      </tr>
+      <tr><td class="pl-6">Taxis at cost (financed amount)</td><td class="text-right">{{ money(data.taxi_assets_cents) }}</td></tr>
+      <tr><td class="pl-6">Spare parts inventory</td><td class="text-right">{{ money(data.spare_parts_inventory_cents) }}</td></tr>
+      <tr><td class="pl-6">Cash & bank (operational)</td><td class="text-right">{{ money(data.cash_balance_cents) }}</td></tr>
+      <tr class="font-semibold">
+        <td>Total Assets</td>
+        <td class="text-right">{{ money(data.total_assets_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Liabilities</td>
+      </tr>
+      <tr><td class="pl-6">Hire-purchase loans outstanding</td><td class="text-right">{{ money(data.loan_outstanding_cents) }}</td></tr>
+      <tr class="font-semibold">
+        <td>Total Liabilities</td>
+        <td class="text-right">{{ money(data.total_liabilities_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="font-bold text-gray-900">
+        <td>Equity</td>
+        <td class="text-right">{{ money(data.equity_cents) }}</td>
+      </tr>
+      <tr class="font-bold text-gray-900">
+        <td>Total Liabilities & Equity</td>
+        <td class="text-right">{{ money(data.total_liabilities_cents + data.equity_cents) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">Note: This is an informational summary. Full balancing (depreciation, accounts payable/receivable) will be added in a future release.</p>
+{% endblock %}

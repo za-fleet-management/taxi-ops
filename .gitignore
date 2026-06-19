@@ -1,0 +1,34 @@
+__pycache__/
+*.pyc
+*.egg-info/
+*.db
+.pytest_cache/
+alembic/versions/*.pyc
+.env
+
+# Logs
+logs/
+
+# Development prompts and notes
+prompts/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/

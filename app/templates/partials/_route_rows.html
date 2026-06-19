@@ -1,0 +1,10 @@
+{% if routes %}
+{% for route in routes %}
+<tr>
+  <td class="font-medium">{{ route.name }}</td>
+  <td>{{ route.distance_km if route.distance_km else '—' }}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="2" class="text-center text-gray-400 py-8">No routes yet. Add your first route above.</td></tr>
+{% endif %}

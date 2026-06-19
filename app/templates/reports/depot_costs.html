@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Depot Cost & Utilisation</h1>
+  <p class="text-sm text-gray-500 mt-1">Workshop and depot activity for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/depot-costs', data.period.start_date, data.period.end_date) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Depot</th>
+        <th>Type</th>
+        <th class="text-right">Employees</th>
+        <th class="text-right">Spare Parts</th>
+        <th class="text-right">Mechanic Payments</th>
+        <th class="text-right">Internal Labour</th>
+        <th class="text-right">Taxis Serviced</th>
+        <th class="text-right">Total Cost</th>
+        <th class="text-right">Cost/Taxi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.depot_name }}</td>
+        <td><span class="badge-modern">{{ item.depot_type }}</span></td>
+        <td class="text-right">{{ item.employees_assigned }}</td>
+        <td class="text-right">{{ money(item.spare_parts_cents) }}</td>
+        <td class="text-right">{{ money(item.mechanic_payments_cents) }}</td>
+        <td class="text-right">{{ money(item.internal_labour_cents) }}</td>
+        <td class="text-right">{{ item.taxis_serviced }}</td>
+        <td class="text-right font-semibold">{{ money(item.total_cost_cents) }}</td>
+        <td class="text-right">{% if item.cost_per_taxi_cents is not none %}{{ money(item.cost_per_taxi_cents) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

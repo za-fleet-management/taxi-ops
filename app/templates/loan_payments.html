@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">{{ taxi.registration_number }} — Loan Payments</h1>
+    <p class="text-sm text-gray-500 mt-1">Lender: {{ loan.lender }} — Remaining balance: R{{ '%.2f' | format(loan.remaining_balance_cents / 100) }}</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/loans" class="btn-modern btn-ghost-modern">Back</a>
+    <button class="btn-modern btn-primary-modern" onclick="document.getElementById('add-modal').showModal()">Record Payment</button>
+  </div>
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Record Loan Payment</h3>
+    <form id="payment-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Amount (rand cents)</label>
+        <input type="number" id="pay-amount" class="input-modern" placeholder="e.g. 850000 = R8,500" min="1" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Payment date</label>
+        <input type="date" id="pay-date" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Reference (statement number)</label>
+        <input type="text" id="pay-ref" class="input-modern" placeholder="Optional">
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Payment</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('payment-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/taxi-loans/{{ loan.id }}/payments', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          amount_cents: parseInt(document.getElementById('pay-amount').value),
+          payment_date: document.getElementById('pay-date').value,
+          reference: document.getElementById('pay-ref').value || null,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('payment-form').reset();
+          document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
+          htmx.trigger('#payment-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save payment'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="payment-list">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Reference</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/loans/{{ loan.id }}/payments" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="3" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

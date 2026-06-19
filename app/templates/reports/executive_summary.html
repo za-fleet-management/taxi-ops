@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, chart_canvas %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Executive Summary</h1>
+  <p class="text-sm text-gray-500 mt-1">Business health at a glance for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/executive-summary', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  {{ kpi_card('Revenue', data.revenue_cents, colour='green') }}
+  {{ kpi_card('Total Cost', data.total_cost_cents, colour='red') }}
+  {{ kpi_card('Gross Profit', data.gross_profit_cents, colour='blue') }}
+  {{ kpi_card('Gross Margin', data.gross_margin_percent * 100, subtitle='percent', colour='purple') }}
+  {{ kpi_card('Active Taxis', data.active_taxis, subtitle=data.total_taxis|string + ' total', colour='blue') }}
+  {{ kpi_card('Active Drivers', data.active_drivers, colour='blue') }}
+  {{ kpi_card('Open Breakdowns', data.open_breakdowns, colour='orange') }}
+  {{ kpi_card('Loan Exposure', data.loan_exposure_cents, colour='red') }}
+</div>
+
+{{ chart_canvas('trendChart', 280) }}
+
+<script>
+(function() {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  const trend = {{ trend_json | tojson }};
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: trend.map(t => t.month),
+      datasets: [
+        { label: 'Revenue', data: trend.map(t => t.revenue_cents / 100), backgroundColor: '#16a34a' },
+        { label: 'Cost', data: trend.map(t => t.cost_cents / 100), backgroundColor: '#dc2626' },
+        { label: 'Profit', data: trend.map(t => t.profit_cents / 100), backgroundColor: '#2563eb' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: '12-Month Revenue, Cost & Profit' } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

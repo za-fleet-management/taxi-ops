@@ -1,0 +1,28 @@
+{% if items %}
+<div class="overflow-x-auto">
+  <table class="table-modern">
+    <thead>
+      <tr>
+        <th>Route</th>
+        <th class="text-right">Distance</th>
+        <th class="text-right">Income</th>
+        <th class="text-right">Allocated Costs</th>
+        <th class="text-right">Profit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td class="font-medium">{{ item.route_name }}</td>
+        <td class="text-right">{{ item.distance_km if item.distance_km else '—' }}{% if item.distance_km %} km{% endif %}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.total_income / 100) }}</td>
+        <td class="text-right">R{{ '%.2f' | format(item.allocated_costs / 100) }}</td>
+        <td class="text-right font-semibold {% if item.profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">R{{ '%.2f' | format(item.profit / 100) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-sm text-gray-400 py-4 text-center">No route profitability data.</p>
+{% endif %}

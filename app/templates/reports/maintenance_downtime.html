@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Maintenance & Downtime</h1>
+  <p class="text-sm text-gray-500 mt-1">Breakdowns with cost and lost-revenue estimate for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/maintenance-downtime', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  {{ kpi_card('Total Repair Cost', data.total_cost_cents, colour='red') }}
+  {{ kpi_card('Estimated Lost Revenue', data.total_lost_revenue_cents, colour='orange') }}
+</div>
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Taxi</th>
+        <th>Reason</th>
+        <th>Start</th>
+        <th>End</th>
+        <th class="text-right">Duration (h)</th>
+        <th class="text-right">Days</th>
+        <th class="text-right">Repair Cost</th>
+        <th class="text-right">Lost Revenue</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.registration_number }}</td>
+        <td>{{ item.reason or '—' }}</td>
+        <td>{{ item.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ item.end_time.strftime('%Y-%m-%d %H:%M') if item.end_time else 'Open' }}</td>
+        <td class="text-right">{{ '%.1f' | format(item.duration_hours) }}</td>
+        <td class="text-right">{{ item.downtime_days }}</td>
+        <td class="text-right">{{ money(item.cost_total_cents) }}</td>
+        <td class="text-right">{{ money(item.lost_revenue_estimate_cents) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">Lost revenue is estimated from each taxi's average daily income in the 30 days before the breakdown.</p>
+{% endblock %}

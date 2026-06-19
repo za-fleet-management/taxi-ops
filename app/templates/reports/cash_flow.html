@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Cash Flow Statement</h1>
+  <p class="text-sm text-gray-500 mt-1">Cash basis movement for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/cash-flow', data.period.start_date, data.period.end_date) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern">
+    <tbody>
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Cash Received</td>
+      </tr>
+      <tr>
+        <td class="pl-6">Daily income collections</td>
+        <td class="text-right text-green-600 font-medium">{{ money(data.cash_in_cents) }}</td>
+      </tr>
+      <tr class="font-semibold">
+        <td>Total Cash In</td>
+        <td class="text-right text-green-600">{{ money(data.cash_in_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Cash Paid Out</td>
+      </tr>
+      <tr><td class="pl-6">Fuel</td><td class="text-right text-red-600">-{{ money(data.fuel_cents) }}</td></tr>
+      <tr><td class="pl-6">Breakdown / repairs</td><td class="text-right text-red-600">-{{ money(data.breakdown_cents) }}</td></tr>
+      <tr><td class="pl-6">Insurance</td><td class="text-right text-red-600">-{{ money(data.insurance_cents) }}</td></tr>
+      <tr><td class="pl-6">Hire-purchase repayments</td><td class="text-right text-red-600">-{{ money(data.loan_payment_cents) }}</td></tr>
+      <tr><td class="pl-6">Spare parts</td><td class="text-right text-red-600">-{{ money(data.spare_part_cents) }}</td></tr>
+      <tr><td class="pl-6">Mechanic payments</td><td class="text-right text-red-600">-{{ money(data.mechanic_payment_cents) }}</td></tr>
+      <tr><td class="pl-6">Salaries & wages</td><td class="text-right text-red-600">-{{ money(data.salary_cents) }}</td></tr>
+      <tr class="font-semibold">
+        <td>Total Cash Out</td>
+        <td class="text-right text-red-600">-{{ money(data.total_cash_out_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="font-bold {% if data.net_cash_movement_cents >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+        <td>Net Cash Movement</td>
+        <td class="text-right">{{ money(data.net_cash_movement_cents) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">Note: This statement reports operational cash movement only. Bank/cash float opening and closing balances will be added when the cash book module is implemented.</p>
+{% endblock %}

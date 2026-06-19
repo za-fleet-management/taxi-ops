@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Log Breakdown</h1>
+    <p class="text-sm text-gray-500 mt-1">Report a vehicle breakdown</p>
+  </div>
+  <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <form id="bd-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="taxi_id" class="input-modern" required>
+          <option value="">Select a taxi</option>
+          {% for t in taxis %}
+          <option value="{{ t.id }}">{{ t.registration_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Breakdown started</label>
+        <input type="datetime-local" id="start_time" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+        <input type="text" id="reason" class="input-modern" placeholder="e.g. Engine overheating">
+      </div>
+      <div id="result"></div>
+      <button type="submit" class="btn-modern btn-primary-modern w-full">Open Breakdown</button>
+    </form>
+  </div>
+</div>
+<script>
+document.getElementById('bd-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const body = JSON.stringify({
+    taxi_id: document.getElementById('taxi_id').value,
+    start_time: new Date(document.getElementById('start_time').value).toISOString(),
+    reason: document.getElementById('reason').value || null,
+  });
+  fetch('/api/breakdowns', { method:'POST', headers:{'Content-Type':'application/json'}, body })
+    .then(r => {
+      if (r.ok) {
+        document.getElementById('bd-form').reset();
+        document.getElementById('result').innerHTML = '<div class="text-sm text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg p-3">Breakdown logged</div>';
+      } else {
+        document.getElementById('result').innerHTML = '<div class="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg p-3">Failed to log breakdown</div>';
+      }
+    });
+});
+</script>
+{% endblock %}

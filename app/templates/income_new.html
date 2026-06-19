@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Log Income</h1>
+    <p class="text-sm text-gray-500 mt-1">Record daily earnings for a taxi</p>
+  </div>
+  <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <form id="income-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="taxi_id" class="input-modern" required>
+          <option value="">Select a taxi</option>
+          {% for t in taxis %}
+          <option value="{{ t.id }}" data-route="{{ t.assigned_route_id or '' }}">{{ t.registration_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Driver</label>
+        <select id="driver_id" class="input-modern" required>
+          <option value="">Select a driver</option>
+          {% for d in drivers %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Route</label>
+        <select id="route_id" class="input-modern">
+          <option value="">— Optional —</option>
+          {% for r in routes %}
+          <option value="{{ r.id }}">{{ r.name }}</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-gray-400 mt-1">Auto-filled from taxi assignment. Override if needed.</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+        <input type="date" id="date" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Total cash (cents)</label>
+        <input type="number" id="total_cash" class="input-modern" placeholder="e.g. 85000 = R850" required>
+        <p class="text-xs text-gray-400 mt-1">Amount in cents. R850 = 85000</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+        <input type="text" id="notes" class="input-modern" placeholder="Optional notes">
+      </div>
+      <div id="result"></div>
+      <button type="submit" class="btn-modern btn-primary-modern w-full">Save Income</button>
+    </form>
+  </div>
+</div>
+<script>
+const taxiRouteMap = {{ taxi_route_map | tojson }};
+document.getElementById('taxi_id').addEventListener('change', function() {
+  const routeId = taxiRouteMap[this.value] || '';
+  document.getElementById('route_id').value = routeId;
+});
+document.getElementById('income-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const routeVal = document.getElementById('route_id').value;
+  const body = JSON.stringify({
+    taxi_id: document.getElementById('taxi_id').value,
+    driver_id: document.getElementById('driver_id').value,
+    date: document.getElementById('date').value,
+    total_cash: parseInt(document.getElementById('total_cash').value) || 0,
+    notes: document.getElementById('notes').value || null,
+    route_id: routeVal || null,
+  });
+  fetch('/api/income', { method:'POST', headers:{'Content-Type':'application/json'}, body })
+    .then(r => {
+      if (r.ok) {
+        document.getElementById('income-form').reset();
+        document.getElementById('result').innerHTML = '<div class="text-sm text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg p-3">Income saved successfully</div>';
+      } else {
+        document.getElementById('result').innerHTML = '<div class="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg p-3">Failed to save income</div>';
+      }
+    });
+});
+</script>
+{% endblock %}

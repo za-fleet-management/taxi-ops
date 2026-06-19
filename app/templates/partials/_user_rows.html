@@ -1,0 +1,57 @@
+{% if users %}
+{% for u in users %}
+<tr class="{% if u.status == 'inactive' %}opacity-50{% endif %}">
+  <td class="font-medium">{{ u.name }}</td>
+  <td>{{ u.phone }}</td>
+  <td>
+    <span class="badge-modern {% if u.role == 'owner' %}badge-active{% elif u.role == 'dispatcher' %}badge-route{% elif u.role == 'accountant' %}badge-fuel{% else %}badge-breakdown{% endif %}">
+      {{ u.role }}
+    </span>
+  </td>
+  <td><span class="badge-modern {% if u.status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">{{ u.status }}</span></td>
+  <td>{{ u.created_at[:10] }}</td>
+  <td>
+    <div class="flex items-center gap-2">
+      {% if u.status == 'active' %}
+      <button class="text-sm text-blue-600 hover:text-blue-800" onclick="openEditModal('{{ u.id }}', '{{ u.name }}', '{{ u.phone }}', '{{ u.role }}')">Edit</button>
+      <button class="text-sm text-red-600 hover:text-red-800" onclick="deactivateUser('{{ u.id }}')">Deactivate</button>
+      {% else %}
+      <button class="text-sm text-green-600 hover:text-green-800" onclick="reactivateUser('{{ u.id }}')">Reactivate</button>
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="6" class="text-center text-gray-400 py-8">No team members yet. Invite your first team member above.</td></tr>
+{% endif %}
+
+<script>
+function deactivateUser(userId) {
+  if (!confirm('Deactivate this user? They will lose access.')) return;
+  fetch('/api/users/' + userId, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast('User deactivated', 'success');
+        htmx.trigger('#user-list tbody', 'load');
+      } else {
+        showToast(data.detail || 'Failed to deactivate user', 'error');
+      }
+    });
+}
+function reactivateUser(userId) {
+  fetch('/api/users/' + userId, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ status: 'active' }),
+  }).then(r => r.json()).then(data => {
+    if (data.id) {
+      showToast('User reactivated', 'success');
+      htmx.trigger('#user-list tbody', 'load');
+    } else {
+      showToast(data.detail || 'Failed to reactivate user', 'error');
+    }
+  });
+}
+</script>

@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Hero -->
+<section class="relative overflow-hidden hero-gradient min-h-[90vh] flex items-center">
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div class="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center">
+    <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm text-white/80 mb-8">
+      <span class="w-2 h-2 rounded-full bg-green-400"></span>
+      Trusted by 50+ fleets across South Africa
+    </div>
+    <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
+      Fleet management<br/>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">built for SA roads</span>
+    </h1>
+    <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
+      Track income, fuel, breakdowns, and driver performance from your phone.
+      Works offline. No internet required at collection time.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/signup" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-all shadow-lg hover:shadow-xl">
+        Start Free Trial
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+      <a href="/login" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-all border border-white/20">
+        Sign In
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="py-24 bg-white">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <p class="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">Everything you need</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Run your fleet from your pocket</h2>
+      <p class="text-gray-500 max-w-xl mx-auto">Purpose-built for South African taxi operators. No complicated software — just the tools you need, every day.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Daily Income Tracking</h3>
+        <p class="text-gray-500 text-sm">Log daily earnings per taxi in under 20 seconds. Works offline — entries sync when you're back online.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Fuel & Cost Tracking</h3>
+        <p class="text-gray-500 text-sm">Record fuel purchases, breakdown costs, and parts used. Know exactly where your money is going.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Profitability Reports</h3>
+        <p class="text-gray-500 text-sm">See income vs costs per taxi, per route, per driver. Make data-driven decisions about your fleet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Driver Performance</h3>
+        <p class="text-gray-500 text-sm">Track which drivers are earning and who's idle. Know your top performers and address issues early.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Multi-Tenant Security</h3>
+        <p class="text-gray-500 text-sm">Your fleet data is isolated from every other organisation. Role-based access for owners and managers.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-circle mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Offline-First</h3>
+        <p class="text-gray-500 text-sm">Designed for SA connectivity. Queue entries on your phone, sync automatically when signal returns.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="py-20 bg-gray-50">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div>
+        <p class="text-3xl md:text-4xl font-bold text-gray-900">R2.4M+</p>
+        <p class="text-sm text-gray-500 mt-1">Income Tracked</p>
+      </div>
+      <div>
+        <p class="text-3xl md:text-4xl font-bold text-gray-900">500+</p>
+        <p class="text-sm text-gray-500 mt-1">Active Taxis</p>
+      </div>
+      <div>
+        <p class="text-3xl md:text-4xl font-bold text-gray-900">12K+</p>
+        <p class="text-sm text-gray-500 mt-1">Entries Logged</p>
+      </div>
+      <div>
+        <p class="text-3xl md:text-4xl font-bold text-gray-900">50+</p>
+        <p class="text-sm text-gray-500 mt-1">Fleets Onboarded</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="py-24 bg-white">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <p class="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">Simple setup</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Get started in minutes</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="text-center">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+          <span class="text-white text-xl font-bold">1</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Create your account</h3>
+        <p class="text-gray-500 text-sm">Sign up with your phone number. Set up your organisation and invite your team.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+          <span class="text-white text-xl font-bold">2</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Add your fleet</h3>
+        <p class="text-gray-500 text-sm">Register your taxis and drivers. Assign drivers to vehicles in one tap.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+          <span class="text-white text-xl font-bold">3</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Start tracking</h3>
+        <p class="text-gray-500 text-sm">Log income, fuel, and breakdowns daily. Watch your reports come to life.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-24 hero-gradient">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Ready to take control of your fleet?</h2>
+    <p class="text-lg text-gray-300 mb-8">No credit card required. Start tracking your fleet's performance today.</p>
+    <a href="/signup" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-all shadow-lg hover:shadow-xl">
+      Start Free Trial
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-gray-400 py-12">
+  <div class="max-w-6xl mx-auto px-4 text-center text-sm">
+    <p class="mb-2">TaxiOps — Fleet Management for South African Taxi Operators</p>
+    <p>&copy; 2026 TaxiOps. All rights reserved.</p>
+  </div>
+</footer>
+{% endblock %}

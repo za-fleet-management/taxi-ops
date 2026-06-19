@@ -1,0 +1,12 @@
+{% if payments %}
+{% for p in payments %}
+<tr>
+  <td>{{ p.payment_date }}</td>
+  <td class="font-medium">R{{ '%.2f' | format(p.amount_cents / 100) }}</td>
+  <td><span class="badge-modern badge-active">{{ p.payment_method }}</span></td>
+  <td>{{ p.reference or '—' }}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="4" class="text-center text-gray-400 py-8">No payments recorded yet.</td></tr>
+{% endif %}

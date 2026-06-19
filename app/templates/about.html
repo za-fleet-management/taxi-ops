@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}About — TaxiOps{% endblock %}
+{% block content %}
+<section class="pt-32 pb-20 bg-white">
+  <div class="max-w-4xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <p class="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">About Us</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Built for South African roads</h1>
+      <p class="text-gray-500 text-lg max-w-2xl mx-auto">We started TaxiOps because fleet owners deserve better than spreadsheets and paper logs.</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none">
+      <div class="bg-gray-50 rounded-2xl p-8 md:p-12 mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
+        <p class="text-gray-600 leading-relaxed">Every day, thousands of taxi operators across South Africa manage their fleets with handwritten notes, paper receipts, and mental arithmetic. Income gets lost, fuel costs go untracked, and breakdowns eat into profits without anyone noticing until it's too late.</p>
+        <p class="text-gray-600 leading-relaxed mt-4">TaxiOps changes that. We built a mobile-first platform that works on any phone, with or without internet, designed specifically for the South African taxi industry. No complicated software. No training required. Just the tools you need to run your fleet profitably.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-2">Simple</h3>
+          <p class="text-sm text-gray-500">Log income in under 20 seconds. No training needed.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-2">Secure</h3>
+          <p class="text-sm text-gray-500">Your fleet data is isolated and encrypted. Role-based access for your team.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-2">Offline-First</h3>
+          <p class="text-sm text-gray-500">Works without internet. Syncs automatically when you're back online.</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 rounded-2xl p-8 md:p-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">What Owners Say</h2>
+        <blockquote class="border-l-4 border-blue-600 pl-6 italic text-gray-600 mb-6">
+          "I used to track everything in a notebook. Now I can see exactly what each taxi earns, what we spend on fuel, and which drivers are performing. It's changed how I run my business."
+          <footer class="mt-2 text-sm not-italic font-medium text-gray-900">— Fleet owner, Soweto</footer>
+        </blockquote>
+        <blockquote class="border-l-4 border-blue-600 pl-6 italic text-gray-600">
+          "The offline feature is a lifesaver. We collect cash fares in areas with no signal, and it all syncs when we get back to town."
+          <footer class="mt-2 text-sm not-italic font-medium text-gray-900">— Route manager, Tshwane</footer>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% if employees %}
+{% for emp in employees %}
+<tr>
+  <td class="font-medium">{{ emp.driver_name }}</td>
+  <td>{{ emp.driver_phone }}</td>
+  <td>{{ emp.package_name or '—' }}</td>
+  <td>{% if emp.base_salary_cents %}R{{ '%.2f' | format(emp.base_salary_cents / 100) }} / {{ emp.payment_frequency }}{% else %}—{% endif %}</td>
+  <td>{{ emp.depot_name or '—' }}</td>
+  <td><span class="badge-modern {% if emp.employee.employment_status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">{{ emp.employee.employment_status }}</span></td>
+  <td>{{ emp.employee.hire_date }}</td>
+  <td>
+    {% if user.role == "owner" %}
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditEmpModal('{{ emp.employee.id }}', '{{ emp.employee.remuneration_package_id or '' }}', '{{ emp.employee.depot_id or '' }}', '{{ emp.employee.employment_status }}')">Edit</button>
+    {% endif %}
+    <a href="/employees/{{ emp.employee.id }}/payments" class="text-sm text-green-600 hover:text-green-800 font-medium ml-2">Payments</a>
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="8" class="text-center text-gray-400 py-8">No employees yet. Add your first employee above.</td></tr>
+{% endif %}

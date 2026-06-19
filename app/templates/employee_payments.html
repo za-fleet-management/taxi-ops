@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">{{ driver.name }} — Payment History</h1>
+    <p class="text-sm text-gray-500 mt-1">
+      {% if package %}
+        Package: {{ package.name }} — R{{ '%.2f' | format(package.base_salary_cents / 100) }}/month
+      {% else %}
+        No package assigned
+      {% endif %}
+    </p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/employees" class="btn-modern btn-ghost-modern">Back</a>
+    {% if user.role == "owner" %}
+    <a href="/salary/new?employee_id={{ employee.id }}" class="btn-modern btn-primary-modern">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+      Record Payment
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Employment Status</p>
+    <p class="text-lg font-bold mt-1">
+      <span class="badge-modern {% if employee.employment_status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">
+        {{ employee.employment_status }}
+      </span>
+    </p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Hire Date</p>
+    <p class="text-lg font-bold mt-1">{{ employee.hire_date }}</p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Phone</p>
+    <p class="text-lg font-bold mt-1">{{ driver.phone }}</p>
+  </div>
+</div>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="payment-list">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Reference</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/salary-payments?employee_id={{ employee.id }}" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="4" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Taxi Profitability</h1>
+  <p class="text-sm text-gray-500 mt-1">Income vs costs per taxi for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/taxi-profitability', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {{ kpi_card('Total Income', data.summary.total_income_cents, colour='green') }}
+  {{ kpi_card('Total Cost', data.summary.total_cost_cents, colour='red') }}
+  {{ kpi_card('Net Profit', data.summary.total_net_profit_cents, colour='blue') }}
+</div>
+
+{{ chart_canvas('taxiChart', 300) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Taxi</th>
+        <th class="text-right">Income</th>
+        <th class="text-right">Fuel</th>
+        <th class="text-right">Repairs</th>
+        <th class="text-right">Insur.</th>
+        <th class="text-right">HP</th>
+        <th class="text-right">Parts</th>
+        <th class="text-right">Mech.</th>
+        <th class="text-right">Salary</th>
+        <th class="text-right">Total Cost</th>
+        <th class="text-right">Net Profit</th>
+        <th class="text-right">Margin</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.registration_number }}{% if item.route_name %} <span class="text-xs text-gray-400">{{ item.route_name }}</span>{% endif %}</td>
+        <td class="text-right">{{ money(item.total_income_cents) }}</td>
+        <td class="text-right">{{ money(item.fuel_cents) }}</td>
+        <td class="text-right">{{ money(item.breakdown_cents) }}</td>
+        <td class="text-right">{{ money(item.insurance_cents) }}</td>
+        <td class="text-right">{{ money(item.loan_payment_cents) }}</td>
+        <td class="text-right">{{ money(item.spare_part_cents) }}</td>
+        <td class="text-right">{{ money(item.mechanic_payment_cents) }}</td>
+        <td class="text-right">{{ money(item.driver_salary_owed_cents) }}</td>
+        <td class="text-right">{{ money(item.total_cost_cents) }}</td>
+        <td class="text-right font-semibold {% if item.net_profit_cents >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ money(item.net_profit_cents) }}</td>
+        <td class="text-right">{{ item.profit_margin_percent }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function() {
+  const items = {{ items_json | tojson }};
+  const labels = items.map(i => i.registration_number);
+  new Chart(document.getElementById('taxiChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Income', data: items.map(i => i.total_income_cents / 100), backgroundColor: '#16a34a' },
+        { label: 'Total Cost', data: items.map(i => i.total_cost_cents / 100), backgroundColor: '#dc2626' },
+        { label: 'Net Profit', data: items.map(i => i.net_profit_cents / 100), backgroundColor: '#2563eb' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Profitability per Taxi' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

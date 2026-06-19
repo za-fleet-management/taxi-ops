@@ -1,0 +1,121 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card-modern p-5">
+    <h2 class="text-lg font-semibold mb-4">Organisation Profile</h2>
+    <form id="org-profile-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Name</label>
+        <input type="text" name="name" class="input-modern w-full" required>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Region</label>
+        <input type="text" name="region" class="input-modern w-full" placeholder="e.g. Limpopo">
+      </div>
+      <button type="submit" class="btn-modern btn-primary-modern">Save Profile</button>
+      <div class="profile-msg text-sm mt-2"></div>
+    </form>
+  </div>
+
+  <div class="card-modern p-5">
+    <h2 class="text-lg font-semibold mb-4">Organisation Settings</h2>
+    <form id="org-settings-form" class="space-y-4">
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="vat_registered" id="vat_registered" class="checkbox-modern">
+        <label for="vat_registered" class="text-sm font-medium text-gray-700">VAT Registered</label>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">VAT Number</label>
+        <input type="text" name="vat_number" class="input-modern w-full" placeholder="e.g. 1234567890">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Financial Year End</label>
+        <input type="date" name="financial_year_end" class="input-modern w-full">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Default Currency</label>
+        <select name="default_currency" class="input-modern w-full">
+          <option value="ZAR">ZAR (South African Rand)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-modern btn-primary-modern">Save Settings</button>
+      <div class="settings-msg text-sm mt-2"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('org-profile-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/organisation/profile', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: this.name.value, region: this.region.value}),
+    });
+    const data = await res.json();
+    const msg = this.querySelector('.profile-msg');
+    if (res.ok) {
+      msg.innerHTML = '<p class="text-green-600">Profile updated</p>';
+    } else {
+      msg.innerHTML = '<p class="text-red-600">' + (data.detail || 'Error') + '</p>';
+    }
+  } catch (err) {
+    this.querySelector('.profile-msg').innerHTML = '<p class="text-red-600">Network error</p>';
+  }
+  btn.disabled = false;
+  setTimeout(() => { this.querySelector('.profile-msg').innerHTML = ''; }, 3000);
+});
+
+document.getElementById('org-settings-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/organisation/settings', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        vat_registered: this.vat_registered.checked,
+        vat_number: this.vat_number.value || null,
+        financial_year_end: this.financial_year_end.value || null,
+        default_currency: this.default_currency.value,
+      }),
+    });
+    const data = await res.json();
+    const msg = this.querySelector('.settings-msg');
+    if (res.ok) {
+      msg.innerHTML = '<p class="text-green-600">Settings saved</p>';
+    } else {
+      msg.innerHTML = '<p class="text-red-600">' + (data.detail || 'Error') + '</p>';
+    }
+  } catch (err) {
+    this.querySelector('.settings-msg').innerHTML = '<p class="text-red-600">Network error</p>';
+  }
+  btn.disabled = false;
+  setTimeout(() => { this.querySelector('.settings-msg').innerHTML = ''; }, 3000);
+});
+
+document.addEventListener('DOMContentLoaded', async function loadOrgData() {
+  try {
+    const [profileRes, settingsRes] = await Promise.all([
+      fetch('/api/organisation/profile'),
+      fetch('/api/organisation/settings'),
+    ]);
+    const profile = await profileRes.json();
+    const settings = await settingsRes.json();
+
+    const pf = document.getElementById('org-profile-form');
+    pf.name.value = profile.name || '';
+    pf.region.value = profile.region || '';
+
+    const sf = document.getElementById('org-settings-form');
+    sf.vat_registered.checked = settings.vat_registered || false;
+    sf.vat_number.value = settings.vat_number || '';
+    sf.financial_year_end.value = settings.financial_year_end || '';
+    sf.default_currency.value = settings.default_currency || 'ZAR';
+  } catch (err) {
+    console.error('Failed to load org data', err);
+  }
+});
+</script>

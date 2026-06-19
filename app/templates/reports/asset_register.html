@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Asset Register</h1>
+  <p class="text-sm text-gray-500 mt-1">Taxi assets, loan balances, insurance and lifetime profit/loss</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {{ kpi_card('Total Asset Value', data.total_asset_value_cents, colour='blue') }}
+  {{ kpi_card('Total Loan Balance', data.total_loan_balance_cents, colour='red') }}
+  {{ kpi_card('Total Net Position', data.total_net_position_cents, colour='green') }}
+</div>
+
+{{ chart_canvas('assetChart', 300) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Registration</th>
+        <th>Model</th>
+        <th>Status</th>
+        <th class="text-right">Purchase Price</th>
+        <th class="text-right">Loan Balance</th>
+        <th class="text-right">Monthly Instalment</th>
+        <th class="text-right">Insurance</th>
+        <th class="text-right">Total Cost</th>
+        <th class="text-right">Total Income</th>
+        <th class="text-right">Net Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.registration_number }}</td>
+        <td>{{ item.model or '—' }}</td>
+        <td><span class="badge-modern {% if item.status == 'active' %}badge-active{% else %}badge-breakdown{% endif %}">{{ item.status }}</span></td>
+        <td class="text-right">{{ money(item.purchase_price_cents) if item.purchase_price_cents is not none else '—' }}</td>
+        <td class="text-right">{{ money(item.remaining_balance_cents) if item.remaining_balance_cents is not none else '—' }}</td>
+        <td class="text-right">{{ money(item.monthly_instalment_cents) if item.monthly_instalment_cents is not none else '—' }}</td>
+        <td class="text-right">{{ money(item.insurance_premium_cents) if item.insurance_premium_cents is not none else '—' }}</td>
+        <td class="text-right">{{ money(item.total_cost_to_date_cents) }}</td>
+        <td class="text-right">{{ money(item.total_income_to_date_cents) }}</td>
+        <td class="text-right font-semibold {% if item.net_position_cents >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ money(item.net_position_cents) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function() {
+  const items = {{ items_json | tojson }};
+  new Chart(document.getElementById('assetChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: items.map(i => i.registration_number),
+      datasets: [
+        { label: 'Total Income', data: items.map(i => i.total_income_to_date_cents / 100), backgroundColor: '#16a34a' },
+        { label: 'Total Cost', data: items.map(i => i.total_cost_to_date_cents / 100), backgroundColor: '#dc2626' },
+        { label: 'Net Position', data: items.map(i => i.net_position_cents / 100), backgroundColor: '#2563eb' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Lifetime Income, Cost & Net Position per Taxi' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

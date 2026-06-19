@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Employees</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage driver employment and salary assignments</p>
+  </div>
+  {% if user.role == "owner" %}
+  <button class="btn-modern btn-primary-modern" onclick="openAddModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Employee
+  </button>
+  {% endif %}
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Add Employee Record</h3>
+    <form id="emp-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Driver</label>
+        <select id="emp-driver" class="input-modern" required>
+          <option value="">— Select driver —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Remuneration package</label>
+        <select id="emp-pkg" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned depot</label>
+        <select id="emp-depot" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Hire date</label>
+        <input type="date" id="emp-hire" class="input-modern" required>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Employee</button>
+      </div>
+    </form>
+    <script>
+    function openAddModal() {
+      document.getElementById('add-modal').showModal();
+      fetch('/api/drivers').then(r => r.json()).then(drivers => {
+        const sel = document.getElementById('emp-driver');
+        sel.innerHTML = '<option value="">— Select driver —</option>';
+        drivers.filter(d => d.status === 'active').forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name + ' (' + d.phone + ')';
+          sel.appendChild(opt);
+        });
+      });
+      fetch('/api/remuneration-packages').then(r => r.json()).then(pkgs => {
+        const sel = document.getElementById('emp-pkg');
+        sel.innerHTML = '<option value="">— None —</option>';
+        pkgs.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name + ' — R' + (p.base_salary_cents / 100).toLocaleString() + ' / ' + p.payment_frequency;
+          sel.appendChild(opt);
+        });
+      });
+      fetch('/api/depots').then(r => r.json()).then(depots => {
+        const sel = document.getElementById('emp-depot');
+        sel.innerHTML = '<option value="">— None —</option>';
+        depots.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          sel.appendChild(opt);
+        });
+      });
+      document.getElementById('emp-hire').value = new Date().toISOString().split('T')[0];
+    }
+    document.getElementById('emp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/employees', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          driver_id: document.getElementById('emp-driver').value,
+          remuneration_package_id: document.getElementById('emp-pkg').value || null,
+          depot_id: document.getElementById('emp-depot').value || null,
+          hire_date: document.getElementById('emp-hire').value,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('emp-form').reset();
+          htmx.trigger('#emp-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save employee'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<dialog id="edit-emp-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit Employee</h3>
+    <form id="edit-emp-form" class="space-y-4">
+      <input type="hidden" id="edit-emp-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Remuneration package</label>
+        <select id="edit-emp-pkg" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned depot</label>
+        <select id="edit-emp-depot" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Employment status</label>
+        <select id="edit-emp-status" class="input-modern">
+          <option value="active">Active</option>
+          <option value="terminated">Terminated</option>
+        </select>
+      </div>
+      <div id="termination-date-group" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Termination date</label>
+        <input type="date" id="edit-emp-term" class="input-modern">
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-emp-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditEmpModal(id, pkgId, depotId, status) {
+      document.getElementById('edit-emp-id').value = id;
+      document.getElementById('edit-emp-status').value = status;
+      document.getElementById('termination-date-group').classList.toggle('hidden', status !== 'terminated');
+      fetch('/api/remuneration-packages').then(r => r.json()).then(pkgs => {
+        const sel = document.getElementById('edit-emp-pkg');
+        sel.innerHTML = '<option value="">— None —</option>';
+        pkgs.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name;
+          if (p.id === pkgId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      });
+      fetch('/api/depots').then(r => r.json()).then(depots => {
+        const sel = document.getElementById('edit-emp-depot');
+        sel.innerHTML = '<option value="">— None —</option>';
+        depots.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          if (d.id === depotId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      });
+      document.getElementById('edit-emp-modal').showModal();
+    }
+    document.getElementById('edit-emp-status').addEventListener('change', function() {
+      document.getElementById('termination-date-group').classList.toggle('hidden', this.value !== 'terminated');
+    });
+    document.getElementById('edit-emp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const empId = document.getElementById('edit-emp-id').value;
+      const body = {
+        remuneration_package_id: document.getElementById('edit-emp-pkg').value || null,
+        depot_id: document.getElementById('edit-emp-depot').value || null,
+        employment_status: document.getElementById('edit-emp-status').value,
+      };
+      if (body.employment_status === 'terminated') {
+        body.termination_date = document.getElementById('edit-emp-term').value || new Date().toISOString().split('T')[0];
+      }
+      fetch('/api/employees/' + empId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-emp-modal').close();
+          showToast('Employee updated successfully', 'success');
+          htmx.trigger('#emp-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update employee', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="emp-list">
+      <thead>
+        <tr>
+          <th>Driver</th>
+          <th>Phone</th>
+          <th>Package</th>
+          <th>Salary</th>
+          <th>Depot</th>
+          <th>Status</th>
+          <th>Hired</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/employees" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="8" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

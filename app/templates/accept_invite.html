@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-12">
+  <div class="text-center mb-8">
+    <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">Join your team</h1>
+    <p class="text-gray-500 text-sm mt-1">You've been invited to manage a fleet</p>
+  </div>
+  <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{{ error }}</div>
+    {% endif %}
+    <form id="invite-form" class="space-y-4">
+      <input type="hidden" name="token" value="{{ token }}">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Your name</label>
+        <input name="name" class="input-modern" placeholder="Full name" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input name="phone" type="tel" class="input-modern" placeholder="+27 12 345 6789" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input name="password" type="password" class="input-modern" placeholder="Min 6 characters" required>
+      </div>
+      <p id="error" class="text-red-600 text-sm hidden"></p>
+      <button class="btn-modern btn-primary-modern w-full">Join Team</button>
+    </form>
+  </div>
+  <p class="text-center text-sm text-gray-500 mt-6">Already have an account? <a href="/login" class="text-blue-600 font-medium hover:underline">Sign in</a></p>
+</div>
+<script>
+document.getElementById('invite-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const r = await fetch('/api/auth/accept-invite', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      token: fd.get('token'),
+      name: fd.get('name'),
+      phone: fd.get('phone'),
+      password: fd.get('password'),
+    }),
+  });
+  if (r.ok) {
+    const data = await r.json();
+    document.cookie = 'access_token=' + data.access_token + '; path=/; max-age=43200';
+    window.location.href = '/dashboard';
+  } else {
+    const err = document.getElementById('error');
+    const detail = (await r.json()).detail || 'Invite failed';
+    err.textContent = typeof detail === 'string' ? detail : 'Validation error';
+    err.classList.remove('hidden');
+  }
+});
+</script>
+{% endblock %}

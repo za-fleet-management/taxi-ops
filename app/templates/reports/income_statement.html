@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Income Statement</h1>
+  <p class="text-sm text-gray-500 mt-1">Profit & Loss for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/income-statement', data.period.start_date, data.period.end_date) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern">
+    <tbody>
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Revenue</td>
+      </tr>
+      <tr>
+        <td class="pl-6">Taxi operations income</td>
+        <td class="text-right">{{ money(data.revenue_cents) }}</td>
+      </tr>
+      <tr class="font-semibold">
+        <td>Total Revenue</td>
+        <td class="text-right">{{ money(data.revenue_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Cost of Operations</td>
+      </tr>
+      <tr><td class="pl-6">Fuel</td><td class="text-right">{{ money(data.fuel_cents) }}</td></tr>
+      <tr><td class="pl-6">Breakdown / repairs</td><td class="text-right">{{ money(data.breakdown_cents) }}</td></tr>
+      <tr><td class="pl-6">Insurance</td><td class="text-right">{{ money(data.insurance_cents) }}</td></tr>
+      <tr><td class="pl-6">Hire-purchase instalments</td><td class="text-right">{{ money(data.loan_payment_cents) }}</td></tr>
+      <tr><td class="pl-6">Spare parts</td><td class="text-right">{{ money(data.spare_part_cents) }}</td></tr>
+      <tr><td class="pl-6">Mechanic payments</td><td class="text-right">{{ money(data.mechanic_payment_cents) }}</td></tr>
+      <tr><td class="pl-6">Driver salaries</td><td class="text-right">{{ money(data.salary_cents) }}</td></tr>
+      <tr class="font-semibold">
+        <td>Total Cost of Operations</td>
+        <td class="text-right">{{ money(data.cost_of_operations_cents) }}</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="font-bold text-blue-700">
+        <td>Gross Profit</td>
+        <td class="text-right">{{ money(data.gross_profit_cents) }}</td>
+      </tr>
+      <tr>
+        <td>Gross Margin</td>
+        <td class="text-right">{{ data.gross_margin_percent }}%</td>
+      </tr>
+      <tr><td colspan="2" class="h-2"></td></tr>
+
+      <tr class="bg-gray-50 font-semibold">
+        <td colspan="2">Operating Expenses</td>
+      </tr>
+      <tr><td class="pl-6">Depot operating costs & overheads</td><td class="text-right">{{ money(data.operating_expenses_cents) }}</td></tr>
+      <tr class="font-bold text-gray-900">
+        <td>Net Profit Before Tax</td>
+        <td class="text-right">{{ money(data.net_profit_cents) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">Note: HP instalments are shown as cash out for operational visibility. Interest vs principal split is planned for a future release.</p>
+{% endblock %}

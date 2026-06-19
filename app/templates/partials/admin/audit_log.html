@@ -1,0 +1,75 @@
+<div class="card-modern overflow-x-auto">
+  <div class="p-5 pb-0">
+    <h2 class="text-lg font-semibold mb-2">Audit Log</h2>
+    <p class="text-sm text-gray-500 mb-4">Track all administrative actions in your organisation.</p>
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <select id="filter-action" class="input-modern text-sm" onchange="loadAuditLog()">
+        <option value="">All Actions</option>
+        <option value="payment.recorded">Payment Recorded</option>
+        <option value="payment.bank_confirmed">Bank Confirmed</option>
+        <option value="payment.confirmed">Payment Confirmed</option>
+        <option value="user.invited">User Invited</option>
+        <option value="user.updated">User Updated</option>
+        <option value="user.deactivated">User Deactivated</option>
+        <option value="user.reactivated">User Reactivated</option>
+        <option value="settings.updated">Settings Updated</option>
+      </select>
+      <select id="filter-entity" class="input-modern text-sm" onchange="loadAuditLog()">
+        <option value="">All Types</option>
+        <option value="payment">Payment</option>
+        <option value="user">User</option>
+        <option value="organisation">Organisation</option>
+        <option value="subscription">Subscription</option>
+      </select>
+    </div>
+  </div>
+  <table class="table-modern text-sm w-full">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>User</th>
+        <th>Action</th>
+        <th>Type</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="audit-tbody">
+      <tr><td colspan="5" class="text-center text-gray-400 py-4">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+async function loadAuditLog() {
+  const action = document.getElementById('filter-action').value;
+  const entity = document.getElementById('filter-entity').value;
+  const params = new URLSearchParams();
+  if (action) params.set('action', action);
+  if (entity) params.set('entity_type', entity);
+
+  try {
+    const res = await fetch('/api/admin/audit-log?' + params.toString());
+    const data = await res.json();
+    const tbody = document.getElementById('audit-tbody');
+    if (data.entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-4">No entries found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.entries.map(e => {
+      let details = '';
+      try {
+        const d = JSON.parse(e.details);
+        details = Object.entries(d).map(([k, v]) => `${k}: ${v}`).join(', ');
+      } catch { details = e.details || ''; }
+      return `<tr>
+        <td class="text-xs whitespace-nowrap">${new Date(e.created_at).toLocaleString()}</td>
+        <td class="font-medium">${e.user_name}</td>
+        <td><span class="badge-modern badge-${e.action.includes('confirmed') ? 'active' : e.action.includes('bank') ? 'badge-breakdown' : ''}">${e.action}</span></td>
+        <td class="text-xs text-gray-500">${e.entity_type}</td>
+        <td class="text-xs text-gray-500 max-w-xs truncate">${details}</td>
+      </tr>`;
+    }).join('');
+  } catch {}
+}
+loadAuditLog();
+</script>

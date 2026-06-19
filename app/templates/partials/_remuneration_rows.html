@@ -1,0 +1,13 @@
+{% if packages %}
+{% for pkg in packages %}
+<tr>
+  <td class="font-medium">{{ pkg.name }}</td>
+  <td>R{{ '%.2f' | format(pkg.base_salary_cents / 100) }} / {{ pkg.payment_frequency }}</td>
+  <td>
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditPkgModal('{{ pkg.id }}', '{{ pkg.name }}', {{ pkg.base_salary_cents }}, '{{ pkg.payment_frequency }}')">Edit</button>
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="3" class="text-center text-gray-400 py-8">No remuneration packages yet. Create your first package above.</td></tr>
+{% endif %}

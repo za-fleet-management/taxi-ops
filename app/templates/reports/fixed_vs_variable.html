@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Fixed vs Variable Cost Analysis</h1>
+  <p class="text-sm text-gray-500 mt-1">Cost classification for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/fixed-vs-variable', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {{ kpi_card('Total Fixed Costs', data.total_fixed_cents, colour='blue') }}
+  {{ kpi_card('Total Variable Costs', data.total_variable_cents, colour='orange') }}
+  {{ kpi_card('Fixed %', (data.fixed_percentage * 100) | int, subtitle='of total', colour='purple') }}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  {{ chart_canvas('costPieChart', 280) }}
+  {{ chart_canvas('fixedVsVariableChart', 280) }}
+</div>
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Type</th>
+        <th class="text-right">Amount</th>
+        <th class="text-right">% of Total Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr class="{% if item.cost_type == 'Fixed' %}bg-blue-50{% else %}bg-orange-50{% endif %}">
+        <td class="font-medium">{{ item.category }}</td>
+        <td><span class="badge-modern {% if item.cost_type == 'Fixed' %}badge-active{% else %}badge-breakdown{% endif %}">{{ item.cost_type }}</span></td>
+        <td class="text-right">{{ money(item.amount_cents) }}</td>
+        <td class="text-right">{{ item.percentage }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="font-bold">
+        <td colspan="2">Total Fixed</td>
+        <td class="text-right">{{ money(data.total_fixed_cents) }}</td>
+        <td class="text-right">{{ data.fixed_percentage }}%</td>
+      </tr>
+      <tr class="font-bold">
+        <td colspan="2">Total Variable</td>
+        <td class="text-right">{{ money(data.total_variable_cents) }}</td>
+        <td class="text-right">{{ data.variable_percentage }}%</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+(function() {
+  const items = {{ items_json | tojson }};
+  const fixedItems = items.filter(i => i.cost_type === 'Fixed');
+  const variableItems = items.filter(i => i.cost_type === 'Variable');
+
+  new Chart(document.getElementById('costPieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(i => i.category),
+      datasets: [{
+        data: items.map(i => i.amount_cents / 100),
+        backgroundColor: ['#2563eb', '#7c3aed', '#06b6d4', '#dc2626', '#f59e0b', '#10b981', '#ec4899'],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Cost Distribution' }, legend: { position: 'bottom' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+
+  new Chart(document.getElementById('fixedVsVariableChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Fixed', 'Variable'],
+      datasets: [{
+        label: 'Amount',
+        data: [{{ data.total_fixed_cents / 100 }}, {{ data.total_variable_cents / 100 }}],
+        backgroundColor: ['#2563eb', '#f59e0b'],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Fixed vs Variable Total' } },
+      scales: { y: { ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

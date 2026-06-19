@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Pricing — TaxiOps{% endblock %}
+{% block content %}
+<section class="pt-32 pb-20 bg-white">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <p class="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">Pricing</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Simple per-taxi pricing</h1>
+      <p class="text-gray-500 text-lg max-w-2xl mx-auto">Pay only for the active taxis in your fleet. No setup fees, no hidden costs.</p>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-16">
+      {% for months, rate, label, discount, popular in [
+        (1, 150, 'Monthly', '', False),
+        (3, 150, 'Quarterly', '', False),
+        (6, 125, '6 Months', 'Save 17%', True),
+        (12, 100, '12 Months', 'Save 33%', False),
+      ] %}
+      <div class="{% if popular %}bg-blue-600 text-white ring-2 ring-blue-600 scale-105{% else %}bg-white border border-gray-200{% endif %} rounded-2xl p-6 shadow-sm relative">
+        {% if popular %}
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-800 text-white text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap">Best Value</div>
+        {% endif %}
+        <h3 class="{% if popular %}text-white{% else %}text-gray-900{% endif %} text-lg font-semibold mb-2">{{ label }}</h3>
+        <p class="{% if popular %}text-white{% else %}text-gray-900{% endif %} text-3xl font-bold mb-1">
+          R{{ rate }}
+          <span class="{% if popular %}text-blue-200{% else %}text-gray-400{% endif %} text-base font-normal">/ taxi / month</span>
+        </p>
+        <p class="{% if popular %}text-blue-200{% else %}text-gray-500{% endif %} text-sm mb-5">{{ months }} month{{ 's' if months > 1 }} upfront</p>
+        <ul class="space-y-2 text-sm {% if popular %}text-blue-100{% else %}text-gray-600{% endif %} mb-6">
+          <li class="flex items-start gap-2">
+            <svg class="w-4 h-4 {% if popular %}text-blue-200{% else %}text-green-500{% endif %} flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            All features included
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="w-4 h-4 {% if popular %}text-blue-200{% else %}text-green-500{% endif %} flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Unlimited taxis
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="w-4 h-4 {% if popular %}text-blue-200{% else %}text-green-500{% endif %} flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            All reports
+          </li>
+        </ul>
+        {% if discount %}
+        <p class="{% if popular %}bg-blue-800 text-blue-100{% else %}bg-green-50 text-green-700{% endif %} text-xs font-semibold px-3 py-1.5 rounded-lg text-center mb-5">{{ discount }}</p>
+        {% endif %}
+        <a href="/signup" class="block w-full {% if popular %}bg-white text-blue-600 hover:bg-blue-50{% else %}bg-gray-900 text-white hover:bg-gray-800{% endif %} font-semibold text-center py-2.5 rounded-lg transition-colors text-sm">Get Started</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="max-w-3xl mx-auto bg-gray-50 rounded-2xl p-8 border border-gray-200">
+      <h2 class="text-xl font-bold text-gray-900 mb-4 text-center">How it works</h2>
+      <div class="grid sm:grid-cols-3 gap-6 text-center text-sm text-gray-600">
+        <div>
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold mx-auto mb-3">1</div>
+          <p class="font-semibold text-gray-900 mb-1">Sign up &amp; add taxis</p>
+          <p>Create your organisation, add your fleet, and choose a plan.</p>
+        </div>
+        <div>
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold mx-auto mb-3">2</div>
+          <p class="font-semibold text-gray-900 mb-1">Make a bank deposit</p>
+          <p>Pay via EFT to our FNB account with your unique reference.</p>
+        </div>
+        <div>
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold mx-auto mb-3">3</div>
+          <p class="font-semibold text-gray-900 mb-1">Submit &amp; confirm</p>
+          <p>Upload proof of payment in-app. We confirm within 24 hours.</p>
+        </div>
+      </div>
+      <div class="mt-6 p-4 bg-white rounded-xl border border-gray-200 text-sm">
+        <p class="font-semibold text-gray-900 mb-2">Bank Details</p>
+        <div class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-gray-600">
+          <p><span class="text-gray-400">Bank:</span> FNB (First National Bank)</p>
+          <p><span class="text-gray-400">Account Holder:</span> Justice Ndou</p>
+          <p><span class="text-gray-400">Account Number:</span> 631 682 305 63</p>
+          <p><span class="text-gray-400">Reference:</span> Your organisation ID</p>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 text-center mt-4">Auto-renewal extends your subscription from the current period end. Expired subscriptions show a banner but don't block access to your data.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

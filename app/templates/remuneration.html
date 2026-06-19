@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Remuneration Packages</h1>
+    <p class="text-sm text-gray-500 mt-1">Define salary packages for your drivers</p>
+  </div>
+  <button class="btn-modern btn-primary-modern" onclick="document.getElementById('add-modal').showModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Package
+  </button>
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">New Remuneration Package</h3>
+    <form id="pkg-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Package name</label>
+        <input type="text" id="pname" class="input-modern" placeholder="e.g. Standard R8000/month" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Monthly salary (rand cents)</label>
+        <input type="number" id="psalary" class="input-modern" placeholder="e.g. 800000 = R8,000" min="0" required>
+        <p class="text-xs text-gray-400 mt-1">Enter amount in cents. R8,000 = 800000</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Payment frequency</label>
+        <select id="pfreq" class="input-modern">
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Package</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('pkg-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/remuneration-packages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('pname').value,
+          base_salary_cents: parseInt(document.getElementById('psalary').value),
+          payment_frequency: document.getElementById('pfreq').value,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('pkg-form').reset();
+          htmx.trigger('#pkg-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save package'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<dialog id="edit-pkg-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit Package</h3>
+    <form id="edit-pkg-form" class="space-y-4">
+      <input type="hidden" id="edit-pkg-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Package name</label>
+        <input type="text" id="edit-pkg-name" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Monthly salary (rand cents)</label>
+        <input type="number" id="edit-pkg-salary" class="input-modern" min="0" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Payment frequency</label>
+        <select id="edit-pkg-freq" class="input-modern">
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-pkg-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditPkgModal(id, name, salary, frequency) {
+      document.getElementById('edit-pkg-id').value = id;
+      document.getElementById('edit-pkg-name').value = name;
+      document.getElementById('edit-pkg-salary').value = salary;
+      document.getElementById('edit-pkg-freq').value = frequency || 'monthly';
+      document.getElementById('edit-pkg-modal').showModal();
+    }
+    document.getElementById('edit-pkg-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const pkgId = document.getElementById('edit-pkg-id').value;
+      fetch('/api/remuneration-packages/' + pkgId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('edit-pkg-name').value,
+          base_salary_cents: parseInt(document.getElementById('edit-pkg-salary').value),
+          payment_frequency: document.getElementById('edit-pkg-freq').value,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-pkg-modal').close();
+          showToast('Package updated successfully', 'success');
+          htmx.trigger('#pkg-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update package', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="pkg-list">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Monthly Salary</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/remuneration" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="3" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

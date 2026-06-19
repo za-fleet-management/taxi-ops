@@ -1,0 +1,13 @@
+{% if insurances %}
+{% for ins, reg in insurances %}
+<tr>
+  <td>{{ reg }}</td>
+  <td class="font-medium">{{ ins.insurer }}</td>
+  <td>{{ ins.policy_number or '—' }}</td>
+  <td>R{{ '%.2f' | format(ins.monthly_premium_cents / 100) }}/mo</td>
+  <td>{{ ins.start_date }}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="5" class="text-center text-gray-400 py-8">No insurance policies yet.</td></tr>
+{% endif %}

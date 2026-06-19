@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Team Members</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage who has access to your fleet</p>
+  </div>
+  <button class="btn-modern btn-primary-modern" onclick="document.getElementById('invite-modal').showModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Invite User
+  </button>
+</div>
+
+<!-- Invite Modal -->
+<dialog id="invite-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Invite Team Member</h3>
+    <form id="invite-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="inv-name" class="input-modern" placeholder="Full name" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input type="tel" id="inv-phone" class="input-modern" placeholder="+27 12 345 6789" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <select id="inv-role" class="input-modern">
+          <option value="manager">Manager — Log income, breakdowns &amp; fuel</option>
+          <option value="dispatcher">Dispatcher — Manage taxis, drivers &amp; log data</option>
+          <option value="accountant">Accountant — View financial reports</option>
+          <option value="viewer">Viewer — Read-only dashboard access</option>
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('invite-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Send Invite</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('invite-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/auth/invite', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('inv-name').value,
+          phone: document.getElementById('inv-phone').value,
+          role: document.getElementById('inv-role').value,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.invite_url) {
+          document.getElementById('invite-modal').close();
+          document.getElementById('invite-form').reset();
+          const link = data.invite_url;
+          navigator.clipboard.writeText(window.location.origin + link).then(() => {
+            showToast('Invite link copied to clipboard!', 'success');
+          }).catch(() => {
+            showToast('Invite link: ' + link, 'success');
+          });
+          htmx.trigger('#user-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to create invite', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<!-- Edit User Modal -->
+<dialog id="edit-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit User</h3>
+    <form id="edit-form" class="space-y-4">
+      <input type="hidden" id="edit-user-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="edit-user-name" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input type="tel" id="edit-user-phone" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <select id="edit-role" class="input-modern">
+          <option value="manager">Manager</option>
+          <option value="dispatcher">Dispatcher</option>
+          <option value="accountant">Accountant</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditModal(userId, userName, userPhone, currentRole) {
+      document.getElementById('edit-user-id').value = userId;
+      document.getElementById('edit-user-name').value = userName;
+      document.getElementById('edit-user-phone').value = userPhone;
+      document.getElementById('edit-role').value = currentRole;
+      document.getElementById('edit-modal').showModal();
+    }
+    document.getElementById('edit-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const userId = document.getElementById('edit-user-id').value;
+      fetch('/api/users/' + userId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('edit-user-name').value,
+          phone: document.getElementById('edit-user-phone').value,
+          role: document.getElementById('edit-role').value,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-modal').close();
+          showToast('User updated successfully', 'success');
+          htmx.trigger('#user-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update user', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="user-list">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/users" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="6" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

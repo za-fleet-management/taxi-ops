@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-12">
+  <div class="text-center mb-8">
+    <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
+    <p class="text-gray-500 text-sm mt-1">Sign in to your fleet account</p>
+  </div>
+  <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+        <input name="phone" type="tel" class="input-modern" placeholder="+27 12 345 6789" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input name="password" type="password" class="input-modern" placeholder="Enter your password" required>
+      </div>
+      <p id="error" class="text-red-600 text-sm hidden"></p>
+      <button class="btn-modern btn-primary-modern w-full">Sign In</button>
+    </form>
+  </div>
+  <p class="text-center text-sm text-gray-500 mt-6">Don't have an account? <a href="/signup" class="text-blue-600 font-medium hover:underline">Create one</a></p>
+</div>
+<script>
+document.getElementById('login-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const r = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ phone: fd.get('phone'), password: fd.get('password') }),
+  });
+  if (r.ok) {
+    const data = await r.json();
+    document.cookie = 'access_token=' + data.access_token + '; path=/; max-age=43200';
+    window.location.href = '/dashboard';
+  } else {
+    document.getElementById('error').textContent = 'Invalid phone or password';
+    document.getElementById('error').classList.remove('hidden');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Taxis</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage your fleet vehicles</p>
+  </div>
+  {% if user.role in ["owner", "dispatcher"] %}
+  <button class="btn-modern btn-primary-modern" onclick="document.getElementById('add-modal').showModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Taxi
+  </button>
+  {% endif %}
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">New Taxi</h3>
+    <form id="taxi-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Registration number</label>
+        <input type="text" id="reg" class="input-modern" placeholder="e.g. CA 123-456" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+        <input type="text" id="model" class="input-modern" placeholder="e.g. Toyota Hiace" required>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Taxi</button>
+      </div>
+    </form>
+    <script>
+    document.getElementById('taxi-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/taxis', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          registration_number: document.getElementById('reg').value,
+          model: document.getElementById('model').value,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('taxi-form').reset();
+          htmx.trigger('#taxi-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save taxi'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<dialog id="edit-taxi-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Edit Taxi</h3>
+    <form id="edit-taxi-form" class="space-y-4">
+      <input type="hidden" id="edit-taxi-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Registration number</label>
+        <input type="text" id="edit-taxi-reg" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+        <input type="text" id="edit-taxi-model" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select id="edit-taxi-status" class="input-modern">
+          <option value="active">Active</option>
+          <option value="breakdown">Breakdown</option>
+          <option value="retired">Retired</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned Route</label>
+        <select id="edit-taxi-route" class="input-modern">
+          <option value="">— None —</option>
+          {% for r in routes %}
+          <option value="{{ r.id }}">{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-taxi-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+      </div>
+    </form>
+    <script>
+    function openEditTaxiModal(taxiId, reg, model, status, routeId) {
+      document.getElementById('edit-taxi-id').value = taxiId;
+      document.getElementById('edit-taxi-reg').value = reg;
+      document.getElementById('edit-taxi-model').value = model;
+      document.getElementById('edit-taxi-status').value = status;
+      document.getElementById('edit-taxi-route').value = routeId;
+      document.getElementById('edit-taxi-modal').showModal();
+    }
+    document.getElementById('edit-taxi-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const taxiId = document.getElementById('edit-taxi-id').value;
+      const routeVal = document.getElementById('edit-taxi-route').value;
+      fetch('/api/taxis/' + taxiId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          registration_number: document.getElementById('edit-taxi-reg').value,
+          model: document.getElementById('edit-taxi-model').value,
+          status: document.getElementById('edit-taxi-status').value,
+          assigned_route_id: routeVal || null,
+        }),
+      }).then(r => r.json()).then(data => {
+        if (data.id) {
+          document.getElementById('edit-taxi-modal').close();
+          showToast('Taxi updated successfully', 'success');
+          htmx.trigger('#taxi-list tbody', 'load');
+        } else {
+          showToast(data.detail || 'Failed to update taxi', 'error');
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="taxi-list">
+      <thead>
+        <tr>
+          <th>Registration</th>
+          <th>Model</th>
+          <th>Status</th>
+          <th>Route</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/taxis" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="4" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

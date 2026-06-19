@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, chart_canvas, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Revenue by Period</h1>
+  <p class="text-sm text-gray-500 mt-1">Revenue trends for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/revenue-by-period', data.period.start_date, data.period.end_date) }}
+
+<div class="flex flex-wrap items-end gap-3 mb-6">
+  <div>
+    <label class="block text-xs font-medium text-gray-500 mb-1">Group by</label>
+    <select id="rpt-group" class="input-modern" onchange="changeGroup(this.value)">
+      <option value="day" {% if data.group_by == 'day' %}selected{% endif %}>Day</option>
+      <option value="week" {% if data.group_by == 'week' %}selected{% endif %}>Week</option>
+      <option value="month" {% if data.group_by == 'month' %}selected{% endif %}>Month</option>
+      <option value="quarter" {% if data.group_by == 'quarter' %}selected{% endif %}>Quarter</option>
+    </select>
+  </div>
+</div>
+
+{% if data.total_previous_cents is not none %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  {{ kpi_card('Current Period', data.total_current_cents, colour='green') }}
+  {{ kpi_card('Previous Period', data.total_previous_cents, colour='gray') }}
+  {{ kpi_card('Change', data.change_cents, colour=data.change_cents >= 0 and 'green' or 'red') }}
+  {{ kpi_card('Change %', ((data.change_percent or 0) * 100) | int, subtitle='percent', colour='blue') }}
+</div>
+{% else %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  {{ kpi_card('Current Period Revenue', data.total_current_cents, colour='green') }}
+</div>
+{% endif %}
+
+{{ chart_canvas('revenueChart', 300) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th class="text-right">Revenue</th>
+        {% if data.series[0].previous_revenue_cents is not none %}
+        <th class="text-right">Previous Period</th>
+        <th class="text-right">Change</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in data.series %}
+      <tr>
+        <td class="font-medium">{{ s.label }}</td>
+        <td class="text-right">{{ money(s.revenue_cents) }}</td>
+        {% if s.previous_revenue_cents is not none %}
+        <td class="text-right">{{ money(s.previous_revenue_cents) }}</td>
+        <td class="text-right {% if s.revenue_cents >= s.previous_revenue_cents %}text-green-600{% else %}text-red-600{% endif %}">
+          {{ money(s.revenue_cents - s.previous_revenue_cents) }}
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function changeGroup(val) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('group_by', val);
+  window.location.href = url.toString();
+}
+
+(function() {
+  const series = {{ series_json | tojson }};
+  const hasPrev = series[0] && series[0].previous_revenue_cents !== null;
+
+  const datasets = [
+    { label: 'Revenue', data: series.map(s => s.revenue_cents / 100), backgroundColor: '#16a34a', borderColor: '#16a34a', borderWidth: 2 },
+  ];
+  if (hasPrev) {
+    datasets.push({ label: 'Previous', data: series.map(s => s.previous_revenue_cents / 100), backgroundColor: '#94a3b8', borderColor: '#94a3b8', borderWidth: 2 });
+  }
+
+  new Chart(document.getElementById('revenueChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: series.map(s => s.label), datasets: datasets },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'Revenue Trend' } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toLocaleString() } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

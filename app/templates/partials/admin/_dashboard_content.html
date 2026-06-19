@@ -1,0 +1,80 @@
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="card-modern p-4">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Active Taxis</p>
+    <p class="text-2xl font-bold text-gray-900">{{ data.active_taxis }} <span class="text-sm font-normal text-gray-400">/ {{ data.total_taxis }}</span></p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Active Drivers</p>
+    <p class="text-2xl font-bold text-gray-900">{{ data.active_drivers }} <span class="text-sm font-normal text-gray-400">/ {{ data.total_drivers }}</span></p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Income This Month</p>
+    <p class="text-2xl font-bold text-green-600">R {{ "{:,.0f}".format(data.income_this_month / 100) }}</p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Open Breakdowns</p>
+    <p class="text-2xl font-bold text-red-600">{{ data.open_breakdowns }}</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="card-modern p-4 border-l-4 border-yellow-400">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Unconfirmed Payments</p>
+    <p class="text-2xl font-bold text-yellow-600">{{ data.unconfirmed_payments }}</p>
+  </div>
+  <div class="card-modern p-4 border-l-4 border-blue-400">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Awaiting Bank Confirmation</p>
+    <p class="text-2xl font-bold text-blue-600">{{ data.bank_unconfirmed_payments }}</p>
+  </div>
+  <div class="card-modern p-4 border-l-4 {% if data.sub_expired %}border-red-400{% else %}border-green-400{% endif %}">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Subscription</p>
+    <p class="text-2xl font-bold {% if data.sub_expired %}text-red-600{% else %}text-green-600{% endif %}">
+      {% if data.sub_expired %}Expired{% else %}{{ data.sub_days_remaining }} days{% endif %}
+    </p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Quick Links</p>
+    <div class="mt-1 space-y-1">
+      <a href="/subscription" class="text-sm text-blue-600 hover:underline block">Subscription</a>
+      <a href="/users" class="text-sm text-blue-600 hover:underline block">Team</a>
+    </div>
+  </div>
+</div>
+
+{% if data.notifications %}
+<div class="card-modern p-5 mb-6">
+  <h2 class="text-lg font-semibold mb-3">Notifications</h2>
+  <div class="space-y-2">
+    {% for n in data.notifications %}
+    <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+      <div class="w-2 h-2 mt-2 rounded-full {% if n.type == 'subscription_expiring' %}bg-yellow-400{% else %}bg-blue-400{% endif %} shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900">{{ n.title }}</p>
+        <p class="text-xs text-gray-500">{{ n.message }}</p>
+      </div>
+      {% if n.link %}
+      <a href="{{ n.link }}" class="text-xs text-blue-600 hover:underline shrink-0">View</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card-modern p-5">
+  <h2 class="text-lg font-semibold mb-3">Recent Activity</h2>
+  {% if data.recent_audit_entries %}
+  <div class="space-y-2">
+    {% for a in data.recent_audit_entries %}
+    <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+      <span class="text-xs font-mono text-gray-400 w-20 shrink-0">{{ a.created_at[:10] }}</span>
+      <span class="text-sm font-medium text-gray-700 w-24 shrink-0">{{ a.user_name }}</span>
+      <span class="badge-modern text-xs {% if 'confirmed' in a.action %}badge-active{% else %}badge-breakdown{% endif %}">{{ a.action }}</span>
+      <span class="text-xs text-gray-500">{{ a.entity_type }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-gray-400">No recent activity</p>
+  {% endif %}
+</div>

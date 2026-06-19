@@ -1,0 +1,17 @@
+{% if taxis %}
+{% for taxi in taxis %}
+<tr>
+  <td class="font-medium">{{ taxi.registration_number }}</td>
+  <td>{{ taxi.model }}</td>
+  <td><span class="badge-modern {% if taxi.status == 'active' %}badge-active{% elif taxi.status == 'breakdown' %}badge-breakdown{% else %}badge-inactive{% endif %}">{{ taxi.status }}</span></td>
+  <td>{{ route_map.get(taxi.assigned_route_id, '—') }}</td>
+  <td>
+    {% if user.role in ["owner", "dispatcher"] %}
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditTaxiModal('{{ taxi.id }}', '{{ taxi.registration_number }}', '{{ taxi.model }}', '{{ taxi.status }}', '{{ taxi.assigned_route_id or '' }}')">Edit</button>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="5" class="text-center text-gray-400 py-8">No taxis yet. Add your first taxi above.</td></tr>
+{% endif %}

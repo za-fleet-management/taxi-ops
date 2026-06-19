@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Route Profitability</h1>
+  <p class="text-sm text-gray-500 mt-1">Income and allocated costs per route for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/route-profitability', data.period.start_date, data.period.end_date) }}
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Route</th>
+        <th class="text-right">Distance (km)</th>
+        <th class="text-right">Trips</th>
+        <th class="text-right">Income</th>
+        <th class="text-right">Fuel</th>
+        <th class="text-right">Repairs</th>
+        <th class="text-right">Salary</th>
+        <th class="text-right">Insur.</th>
+        <th class="text-right">HP</th>
+        <th class="text-right">Total Cost</th>
+        <th class="text-right">Profit</th>
+        <th class="text-right">Profit/km</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.route_name }}</td>
+        <td class="text-right">{{ '%.1f' | format(item.distance_km or 0) }}</td>
+        <td class="text-right">{{ item.income_count }}</td>
+        <td class="text-right">{{ money(item.total_income_cents) }}</td>
+        <td class="text-right">{{ money(item.allocated_fuel_cents) }}</td>
+        <td class="text-right">{{ money(item.allocated_breakdown_cents) }}</td>
+        <td class="text-right">{{ money(item.allocated_salary_cents) }}</td>
+        <td class="text-right">{{ money(item.allocated_insurance_cents) }}</td>
+        <td class="text-right">{{ money(item.allocated_loan_cents) }}</td>
+        <td class="text-right">{{ money(item.total_allocated_cost_cents) }}</td>
+        <td class="text-right font-semibold {% if item.profit_cents >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ money(item.profit_cents) }}</td>
+        <td class="text-right">{% if item.profit_per_km_cents is not none %}{{ money(item.profit_per_km_cents) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">Costs are allocated proportionally based on how many routes each taxi tagged during the period.</p>
+{% endblock %}

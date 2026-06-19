@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Spare Parts Purchase</h1>
+    <p class="text-sm text-gray-500 mt-1">Log spare parts bought at a depot. Assigned to a taxi or recorded as general stock.</p>
+  </div>
+  <a href="/depots" class="btn-modern btn-ghost-modern">Back</a>
+</div>
+
+<div class="card-modern max-w-lg">
+  <form id="sp-form" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Depot</label>
+      <select id="sp-depot" class="input-modern" required>
+        <option value="">— Select depot —</option>
+        {% for depot in depots %}
+        <option value="{{ depot.id }}">{{ depot.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Taxi (optional)</label>
+      <select id="sp-taxi" class="input-modern">
+        <option value="">— General stock —</option>
+        {% for taxi in taxis %}
+        <option value="{{ taxi.id }}">{{ taxi.registration_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+      <input type="text" id="sp-desc" class="input-modern" placeholder="e.g. Brake pads, oil filter" required>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Total cost (rand cents)</label>
+      <input type="number" id="sp-cost" class="input-modern" placeholder="e.g. 25000 = R250" min="0" required>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+      <input type="date" id="sp-date" class="input-modern" required>
+    </div>
+    <div class="pt-2">
+      <button type="submit" class="btn-modern btn-primary-modern w-full">Log Purchase</button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('sp-date').value = new Date().toISOString().split('T')[0];
+document.getElementById('sp-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch('/api/spare-parts', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      depot_id: document.getElementById('sp-depot').value,
+      taxi_id: document.getElementById('sp-taxi').value || null,
+      description: document.getElementById('sp-desc').value,
+      cost_total_cents: parseInt(document.getElementById('sp-cost').value),
+      date: document.getElementById('sp-date').value,
+    }),
+  }).then(r => {
+    if (r.ok) {
+      showToast('Spare parts purchase logged', 'success');
+      document.getElementById('sp-form').reset();
+      document.getElementById('sp-date').value = new Date().toISOString().split('T')[0];
+    } else {
+      r.json().then(d => showToast(d.detail || 'Failed to log purchase', 'error'));
+    }
+  });
+});
+</script>
+{% endblock %}

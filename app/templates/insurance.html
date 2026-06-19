@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Insurance</h1>
+    <p class="text-sm text-gray-500 mt-1">Track monthly insurance premiums per taxi</p>
+  </div>
+  <button class="btn-modern btn-primary-modern" onclick="openAddModal()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Insurance
+  </button>
+</div>
+
+<dialog id="add-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">New Insurance Policy</h3>
+    <form id="ins-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="ins-taxi" class="input-modern" required>
+          <option value="">— Select taxi —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Insurer</label>
+        <input type="text" id="ins-insurer" class="input-modern" placeholder="e.g. Santam" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Policy number</label>
+        <input type="text" id="ins-policy" class="input-modern" placeholder="Optional">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Monthly premium (rand cents)</label>
+        <input type="number" id="ins-premium" class="input-modern" placeholder="e.g. 150000 = R1,500" min="0" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Start date</label>
+        <input type="date" id="ins-start" class="input-modern" required>
+      </div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Insurance</button>
+      </div>
+    </form>
+    <script>
+    function openAddModal() {
+      document.getElementById('add-modal').showModal();
+      fetch('/api/taxis').then(r => r.json()).then(taxis => {
+        const sel = document.getElementById('ins-taxi');
+        sel.innerHTML = '<option value="">— Select taxi —</option>';
+        taxis.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.registration_number;
+          sel.appendChild(opt);
+        });
+      });
+      document.getElementById('ins-start').value = new Date().toISOString().split('T')[0];
+    }
+    document.getElementById('ins-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('/api/insurance', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          taxi_id: document.getElementById('ins-taxi').value,
+          insurer: document.getElementById('ins-insurer').value,
+          policy_number: document.getElementById('ins-policy').value || null,
+          monthly_premium_cents: parseInt(document.getElementById('ins-premium').value),
+          start_date: document.getElementById('ins-start').value,
+        }),
+      }).then(r => {
+        if (r.ok) {
+          document.getElementById('add-modal').close();
+          document.getElementById('ins-form').reset();
+          htmx.trigger('#ins-list tbody', 'load');
+        } else {
+          r.json().then(d => alert(d.detail || 'Failed to save insurance'));
+        }
+      });
+    });
+    </script>
+  </div>
+</dialog>
+
+<div class="card-modern">
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="ins-list">
+      <thead>
+        <tr>
+          <th>Taxi</th>
+          <th>Insurer</th>
+          <th>Policy</th>
+          <th>Monthly Premium</th>
+          <th>Start Date</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/insurance" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="5" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% macro period_selector(target_url, start_date, end_date) %}
+<form class="flex flex-wrap items-end gap-3 mb-6" onsubmit="return false;">
+  <div>
+    <label class="block text-xs font-medium text-gray-500 mb-1">Start date</label>
+    <input type="date" id="rpt-start" value="{{ start_date }}" class="input-modern">
+  </div>
+  <div>
+    <label class="block text-xs font-medium text-gray-500 mb-1">End date</label>
+    <input type="date" id="rpt-end" value="{{ end_date }}" class="input-modern">
+  </div>
+  <div class="flex gap-2">
+    <button type="button" class="btn-modern btn-primary-modern" onclick="loadReport()">Update</button>
+    <button type="button" class="btn-modern btn-ghost-modern" onclick="exportCSV()">Export CSV</button>
+  </div>
+</form>
+<script>
+function loadReport() {
+  const start = document.getElementById('rpt-start').value;
+  const end = document.getElementById('rpt-end').value;
+  const url = new URL(window.location.href);
+  url.searchParams.set('start_date', start);
+  url.searchParams.set('end_date', end);
+  window.location.href = url.toString();
+}
+function exportCSV() {
+  const start = document.getElementById('rpt-start').value;
+  const end = document.getElementById('rpt-end').value;
+  const url = new URL('{{ target_url }}', window.location.origin);
+  url.searchParams.set('start_date', start);
+  url.searchParams.set('end_date', end);
+  url.searchParams.set('format', 'csv');
+  window.location.href = url.toString();
+}
+</script>
+{% endmacro %}
+
+{% macro kpi_card(title, amount, subtitle=None, colour='blue') %}
+<div class="card-modern p-4">
+  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{{ title }}</p>
+  <p class="text-2xl font-bold text-{{ colour }}-600">R{{ '%.2f' | format(amount / 100) }}</p>
+  {% if subtitle %}
+  <p class="text-xs text-gray-500 mt-1">{{ subtitle }}</p>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro chart_canvas(id, height=256) %}
+<div class="card-modern p-4 mb-6">
+  <canvas id="{{ id }}" height="{{ height }}"></canvas>
+</div>
+{% endmacro %}
+
+{% macro money(val) %}R{{ '%.2f' | format((val or 0) / 100) }}{% endmacro %}

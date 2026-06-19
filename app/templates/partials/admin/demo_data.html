@@ -1,0 +1,153 @@
+<div hx-get="/api/seed/status" hx-trigger="load" hx-swap="innerHTML" hx-target="#seed-status-box"></div>
+
+<div id="seed-status-box"></div>
+
+<div class="card-modern p-5 mb-6" id="load-demo-box">
+  <h2 class="text-lg font-semibold mb-2">Load Demo Data</h2>
+  <p class="text-sm text-gray-500 mb-4">
+    Populate your organisation with realistic sample data including taxis, drivers, income records, 
+    breakdowns, fuel entries, and more. This helps you explore the full capabilities of TaxiOps 
+    before entering your own data.
+  </p>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div class="bg-blue-50 rounded-lg p-3 text-center">
+      <p class="text-2xl font-bold text-blue-600" id="seed-taxis">—</p>
+      <p class="text-xs text-gray-500">Taxis</p>
+    </div>
+    <div class="bg-green-50 rounded-lg p-3 text-center">
+      <p class="text-2xl font-bold text-green-600" id="seed-drivers">—</p>
+      <p class="text-xs text-gray-500">Drivers</p>
+    </div>
+    <div class="bg-purple-50 rounded-lg p-3 text-center">
+      <p class="text-2xl font-bold text-purple-600" id="seed-income">—</p>
+      <p class="text-xs text-gray-500">Income Entries</p>
+    </div>
+    <div class="bg-orange-50 rounded-lg p-3 text-center">
+      <p class="text-2xl font-bold text-orange-600" id="seed-breakdowns">—</p>
+      <p class="text-xs text-gray-500">Breakdowns</p>
+    </div>
+    <div class="bg-yellow-50 rounded-lg p-3 text-center">
+      <p class="text-2xl font-bold text-yellow-600" id="seed-fuel">—</p>
+      <p class="text-xs text-gray-500">Fuel Entries</p>
+    </div>
+  </div>
+
+  <div class="flex gap-3" id="demo-actions">
+    <button id="btn-load-seed" class="btn-modern btn-primary-modern" onclick="loadSeedData()">
+      Load Demo Data
+    </button>
+    <button id="btn-clear-seed" class="btn-modern bg-red-600 text-white hover:bg-red-700 hidden" onclick="clearSeedData()">
+      Remove All Demo Data
+    </button>
+  </div>
+  <div id="seed-msg" class="mt-3 text-sm"></div>
+</div>
+
+<div class="card-modern p-5">
+  <h2 class="text-lg font-semibold mb-2">What Gets Loaded</h2>
+  <div class="text-sm text-gray-600 space-y-2">
+    <p>✔ <strong>7 Taxis</strong> — Toyota Quantum, Hiace, Nissan NP200, Ford Ranger, etc.</p>
+    <p>✔ <strong>7 Drivers</strong> — with assignments to taxis</p>
+    <p>✔ <strong>3 Routes</strong> — Thohoyandou–Sibasa, Makhado–Louis Trichardt, Polokwane–Seshego</p>
+    <p>✔ <strong>30 days of income</strong> — daily earnings per taxi (R500–R2,500 range)</p>
+    <p>✔ <strong>Breakdowns</strong> — engine, brake, clutch issues + one open breakdown</p>
+    <p>✔ <strong>Fuel entries</strong> — 4–8 entries per taxi over the period</p>
+    <p>✔ <strong>Insurance policies</strong> — Old Mutual, Santam, Hollard, MiWay</p>
+    <p>✔ <strong>Taxi loans</strong> — Nedbank & ABSA with payment history</p>
+    <p>✔ <strong>Remuneration packages & employees</strong> — daily, weekly, monthly rates</p>
+    <p>✔ <strong>Salary, spare parts & mechanic payments</strong></p>
+  </div>
+  <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+    <strong>Note:</strong> Loading demo data is idempotent — it will only work if you have no data yet. 
+    To reload, first remove existing data using "Remove All Demo Data".
+  </div>
+</div>
+
+<script>
+async function checkSeedStatus() {
+  try {
+    const res = await fetch('/api/seed/status');
+    const data = await res.json();
+    const btnLoad = document.getElementById('btn-load-seed');
+    const btnClear = document.getElementById('btn-clear-seed');
+    const box = document.getElementById('load-demo-box');
+
+    document.getElementById('seed-taxis').textContent = data.counts.taxis;
+    document.getElementById('seed-drivers').textContent = data.counts.drivers;
+    document.getElementById('seed-income').textContent = data.counts.income_entries;
+
+    if (data.has_data) {
+      btnLoad.disabled = true;
+      btnLoad.classList.add('opacity-50', 'cursor-not-allowed');
+      btnLoad.textContent = 'Data Already Loaded';
+      btnClear.classList.remove('hidden');
+    }
+  } catch {}
+}
+
+async function loadSeedData() {
+  const btn = document.getElementById('btn-load-seed');
+  const msg = document.getElementById('seed-msg');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  try {
+    const res = await fetch('/api/seed/load', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      msg.innerHTML = '<p class="text-green-600 font-medium">' + data.reason + '</p>';
+      if (data.stats) {
+        document.getElementById('seed-taxis').textContent = data.stats.taxis;
+        document.getElementById('seed-drivers').textContent = data.stats.drivers;
+        document.getElementById('seed-income').textContent = data.stats.income_entries;
+        document.getElementById('seed-breakdowns').textContent = data.stats.breakdowns || '0';
+        document.getElementById('seed-fuel').textContent = data.stats.fuel_entries || '0';
+      }
+      document.getElementById('btn-clear-seed').classList.remove('hidden');
+      btn.textContent = 'Data Loaded';
+    } else {
+      msg.innerHTML = '<p class="text-red-600">' + (data.detail || 'Error') + '</p>';
+      btn.disabled = false;
+      btn.textContent = 'Load Demo Data';
+    }
+  } catch {
+    msg.innerHTML = '<p class="text-red-600">Network error</p>';
+    btn.disabled = false;
+    btn.textContent = 'Load Demo Data';
+  }
+}
+
+async function clearSeedData() {
+  if (!confirm('Remove all demo data? This cannot be undone. Your organisation, users, and subscription will be preserved.')) return;
+
+  const btn = document.getElementById('btn-clear-seed');
+  const msg = document.getElementById('seed-msg');
+  btn.disabled = true;
+  btn.textContent = 'Removing...';
+  try {
+    const res = await fetch('/api/seed/clear', { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok) {
+      msg.innerHTML = '<p class="text-green-600 font-medium">Data cleared. You can now load fresh demo data.</p>';
+      document.getElementById('seed-taxis').textContent = '0';
+      document.getElementById('seed-drivers').textContent = '0';
+      document.getElementById('seed-income').textContent = '0';
+      document.getElementById('seed-breakdowns').textContent = '0';
+      document.getElementById('seed-fuel').textContent = '0';
+      const btnLoad = document.getElementById('btn-load-seed');
+      btnLoad.disabled = false;
+      btnLoad.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnLoad.textContent = 'Load Demo Data';
+      btn.classList.add('hidden');
+    } else {
+      msg.innerHTML = '<p class="text-red-600">Error clearing data</p>';
+    }
+  } catch {
+    msg.innerHTML = '<p class="text-red-600">Network error</p>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Remove All Demo Data';
+}
+
+checkSeedStatus();
+</script>

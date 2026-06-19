@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "reports/_macros.html" import period_selector, kpi_card, money %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Driver Performance & Earnings</h1>
+  <p class="text-sm text-gray-500 mt-1">Activity, income generated and salary reconciliation for {{ data.period.start_date }} to {{ data.period.end_date }}</p>
+</div>
+
+{{ period_selector('/api/reporting/driver-performance', data.period.start_date, data.period.end_date) }}
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  {{ kpi_card('Total Income', data.summary.total_income_cents, colour='green') }}
+  {{ kpi_card('Salary Owed', data.summary.total_salary_owed_cents, colour='orange') }}
+  {{ kpi_card('Salary Paid', data.summary.total_salary_paid_cents, colour='blue') }}
+  {{ kpi_card('Total Idle Days', data.summary.total_idle_days, colour='red') }}
+</div>
+
+<div class="card-modern overflow-x-auto">
+  <table class="table-modern text-sm">
+    <thead>
+      <tr>
+        <th>Driver</th>
+        <th>Taxi</th>
+        <th class="text-right">Income Days</th>
+        <th class="text-right">Idle Days</th>
+        <th class="text-right">Income</th>
+        <th class="text-right">Package</th>
+        <th class="text-right">Owed</th>
+        <th class="text-right">Paid</th>
+        <th class="text-right">Balance</th>
+        <th class="text-right">Income/Day</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data.items %}
+      <tr>
+        <td class="font-medium">{{ item.driver_name }}</td>
+        <td>{{ item.taxi_registration or '—' }}</td>
+        <td class="text-right">{{ item.income_days }}</td>
+        <td class="text-right {% if item.idle_days > 5 %}text-red-600 font-semibold{% endif %}">{{ item.idle_days }}</td>
+        <td class="text-right">{{ money(item.total_income_cents) }}</td>
+        <td class="text-right">{% if item.package_name %}{{ item.package_name }} ({{ item.payment_frequency }}){% else %}—{% endif %}</td>
+        <td class="text-right">{{ money(item.salary_owed_cents) }}</td>
+        <td class="text-right">{{ money(item.salary_paid_cents) }}</td>
+        <td class="text-right font-semibold {% if item.salary_balance_cents > 0 %}text-red-600{% else %}text-green-600{% endif %}">{{ money(item.salary_balance_cents) }}</td>
+        <td class="text-right">{{ money(item.income_per_active_day_cents) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

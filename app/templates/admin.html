@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}TaxiOps — Administration{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Administration</h1>
+  <p class="text-sm text-gray-500 mt-1">Manage your organisation, subscriptions, and team</p>
+</div>
+
+{% if orgs %}
+<form id="org-form" class="mb-4">
+  <div class="flex items-center gap-3">
+    <label class="text-sm font-medium text-gray-700">Organisation:</label>
+    <select name="org_id" class="select select-bordered select-sm max-w-xs"
+      onchange="this.form.dispatchEvent(new Event('change', {bubbles:true}))">
+      {% for org in orgs %}
+      <option value="{{ org.id }}">{{ org.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+{% endif %}
+
+<div class="mb-6 border-b border-gray-200">
+  <nav class="flex gap-6 overflow-x-auto text-sm font-medium" id="admin-tabs">
+    <button class="admin-tab active pb-3 border-b-2 border-blue-600 text-blue-600" hx-get="/partials/admin/dashboard" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Dashboard
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/settings" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Organisation Settings
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/billing" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Billing
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/reconciliation" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Reconciliation
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/invoices" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Invoices
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/audit-log" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Audit Log
+    </button>
+    <button class="admin-tab pb-3 text-gray-500 hover:text-gray-700" hx-get="/partials/admin/demo-data" hx-target="#admin-content" hx-trigger="click" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+      Demo Data
+    </button>
+  </nav>
+</div>
+
+<div id="admin-content" hx-get="/partials/admin/dashboard" hx-trigger="load" hx-swap="innerHTML"{% if orgs %} hx-include="#org-form"{% endif %}>
+  <div class="text-center py-12 text-gray-400">Loading...</div>
+</div>
+
+<script>
+(function() {
+  var tabs = document.getElementById('admin-tabs');
+  var orgForm = document.getElementById('org-form');
+
+  tabs.addEventListener('click', function(e) {
+    if (e.target.classList.contains('admin-tab')) {
+      document.querySelectorAll('.admin-tab').forEach(function(t) {
+        t.classList.remove('active', 'border-blue-600', 'text-blue-600');
+        t.classList.add('text-gray-500');
+      });
+      e.target.classList.add('active', 'border-blue-600', 'text-blue-600');
+      e.target.classList.remove('text-gray-500');
+    }
+  });
+
+  if (orgForm) {
+    orgForm.addEventListener('change', function() {
+      var firstTab = tabs.querySelector('.admin-tab');
+      if (firstTab) {
+        firstTab.click();
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}
