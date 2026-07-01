@@ -46,6 +46,7 @@ from app.models.mechanic_payment import MechanicPayment
 from app.models.remuneration import RemunerationPackage
 from app.models.route import Route, RouteAssignment
 from app.models.salary_payment import SalaryPayment
+from app.models.service import ServiceRecord, ServiceType, TaxiServiceSchedule
 from app.models.spare_part import SparePartPurchase
 from app.models.organisation import Organisation
 from app.models.subscription import OrganisationSubscription, SubscriptionPayment
@@ -813,6 +814,18 @@ def loans_page(
     return templates.TemplateResponse(request, "loans.html", {"request": request, "user": user})
 
 
+@app.get("/servicing", response_class=HTMLResponse)
+def servicing_page(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    taxis = db.query(Taxi).filter(Taxi.organisation_id == user.organisation_id).all()
+    return templates.TemplateResponse(
+        request, "servicing.html", {"request": request, "user": user, "taxis": taxis}
+    )
+
+
 @app.get("/loans/{loan_id}/payments", response_class=HTMLResponse)
 def loan_payments_page(
     request: Request,
@@ -915,13 +928,14 @@ def taxi_rows(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    from datetime import date as d8
     taxis = db.query(Taxi).filter(Taxi.organisation_id == user.organisation_id).all()
     routes = db.query(Route).filter(Route.organisation_id == user.organisation_id).all()
     route_map = {r.id: r.name for r in routes}
     return templates.TemplateResponse(
         request,
         "partials/_taxi_rows.html",
-        {"request": request, "user": user, "taxis": taxis, "routes": routes, "route_map": route_map},
+        {"request": request, "user": user, "taxis": taxis, "routes": routes, "route_map": route_map, "today": d8.today()},
     )
 
 
@@ -1464,4 +1478,36 @@ def loan_payment_rows(
         request,
         "partials/_loan_payment_rows.html",
         {"request": request, "payments": payments},
+    )
+
+
+@app.get("/partials/servicing/schedules", response_class=HTMLResponse)
+def servicing_schedules_partial(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from datetime import date as d8
+    from app.api.servicing import list_schedules
+    data = list_schedules(db=db, user=user)
+    return templates.TemplateResponse(
+        request,
+        "partials/_servicing_schedules.html",
+        {"request": request, "user": user, "scheds": data, "today": d8.today()},
+    )
+
+
+@app.get("/partials/servicing/records", response_class=HTMLResponse)
+def servicing_records_partial(
+    request: Request,
+    taxi_id: str | None = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.api.servicing import list_service_records
+    data = list_service_records(taxi_id=taxi_id, db=db, user=user)
+    return templates.TemplateResponse(
+        request,
+        "partials/_servicing_records.html",
+        {"request": request, "user": user, "recs": data},
     )

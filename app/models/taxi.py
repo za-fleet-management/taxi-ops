@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import Date, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, gen_uuid
@@ -19,6 +19,8 @@ class Taxi(Base):
     assigned_route_id: Mapped[str | None] = mapped_column(
         String(32), ForeignKey("routes.id"), nullable=True
     )
+    license_disk_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    license_disk_expiry: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     route = relationship("Route", foreign_keys=[assigned_route_id])

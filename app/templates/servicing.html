@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Servicing</h1>
+    <p class="text-sm text-gray-500 mt-1">Track service schedules, records, and costs per taxi</p>
+  </div>
+  {% if user.role in ["owner", "dispatcher"] %}
+  <div class="flex gap-2">
+    <button class="btn-modern btn-ghost-modern" onclick="openTypeModal()">Manage Service Types</button>
+    <button class="btn-modern btn-primary-modern" onclick="openAddRecordModal()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Log Service
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Overdue Services</p>
+    <p class="text-2xl font-bold text-red-600" id="overdue-count">—</p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Upcoming (30 days)</p>
+    <p class="text-2xl font-bold text-amber-600" id="upcoming-count">—</p>
+  </div>
+  <div class="card-modern p-4">
+    <p class="text-sm text-gray-500">Total Service Cost (all time)</p>
+    <p class="text-2xl font-bold text-gray-900" id="total-cost">—</p>
+  </div>
+</div>
+
+<!-- Service schedule table -->
+<div class="card-modern mb-6">
+  <div class="flex items-center justify-between p-4 border-b border-gray-100">
+    <h2 class="text-lg font-semibold">Service Schedules</h2>
+    {% if user.role in ["owner", "dispatcher"] %}
+    <button class="btn-modern btn-primary-modern text-sm" onclick="openAddScheduleModal()">Add Schedule</button>
+    {% endif %}
+  </div>
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="sched-list">
+      <thead>
+        <tr>
+          <th>Taxi</th>
+          <th>Service Type</th>
+          <th>Last Service</th>
+          <th>Last Odometer</th>
+          <th>Next Due</th>
+          <th>Next Due KM</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/servicing/schedules" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="8" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Service records table -->
+<div class="card-modern">
+  <div class="flex items-center justify-between p-4 border-b border-gray-100">
+    <h2 class="text-lg font-semibold">Service History</h2>
+    <select id="filter-taxi" class="input-modern text-sm max-w-xs" onchange="loadRecords()">
+      <option value="">All taxis</option>
+    </select>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="table-modern" id="rec-list">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Taxi</th>
+          <th>Service Type</th>
+          <th>Odometer</th>
+          <th>Cost</th>
+          <th>Vendor</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody hx-get="/partials/servicing/records" hx-trigger="load" hx-target="closest tbody">
+        <tr><td colspan="8" class="text-center text-gray-400 py-8">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Service Type Modal -->
+<dialog id="type-modal" class="modal">
+  <div class="modal-box rounded-xl p-6 max-w-lg">
+    <h3 class="text-lg font-bold mb-4">Service Types</h3>
+    <div id="type-list" class="space-y-2 mb-4"></div>
+    <hr class="my-4">
+    <form id="type-form" class="space-y-3">
+      <input type="hidden" id="edit-type-id">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input type="text" id="type-name" class="input-modern" placeholder="e.g. Oil Change" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <input type="text" id="type-desc" class="input-modern" placeholder="Optional">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Interval (km)</label>
+          <input type="number" id="type-interval-km" class="input-modern" placeholder="e.g. 10000" min="0">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Interval (days)</label>
+          <input type="number" id="type-interval-days" class="input-modern" placeholder="e.g. 90" min="0">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Reminder (days before)</label>
+        <input type="number" id="type-reminder" class="input-modern" value="7" min="0">
+      </div>
+      <div class="modal-action mt-4">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('type-modal').close()">Close</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Type</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Add Schedule Modal -->
+<dialog id="add-sched-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Add Service Schedule</h3>
+    <form id="sched-form" class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="sched-taxi" class="input-modern" required></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+        <select id="sched-type" class="input-modern" required></select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Last service date</label>
+          <input type="date" id="sched-last-date" class="input-modern">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Last odometer (km)</label>
+          <input type="number" id="sched-last-km" class="input-modern" placeholder="Optional" min="0">
+        </div>
+      </div>
+      <div class="modal-action mt-4">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-sched-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Add Schedule</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Add Service Record Modal -->
+<dialog id="add-rec-modal" class="modal">
+  <div class="modal-box rounded-xl p-6">
+    <h3 class="text-lg font-bold mb-4">Log Service</h3>
+    <form id="rec-form" class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Taxi</label>
+        <select id="rec-taxi" class="input-modern" required></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+        <select id="rec-type" class="input-modern" required></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Schedule (for automatic next-due update)</label>
+        <select id="rec-sched" class="input-modern">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Service date</label>
+        <input type="date" id="rec-date" class="input-modern" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Odometer (km)</label>
+        <input type="number" id="rec-odometer" class="input-modern" placeholder="Optional" min="0">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Cost (cents)</label>
+        <input type="number" id="rec-cost" class="input-modern" placeholder="e.g. 150000 = R1,500" min="0" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+        <input type="text" id="rec-vendor" class="input-modern" placeholder="e.g. Bosch Service Centre">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+        <textarea id="rec-notes" class="input-modern" rows="2" placeholder="Optional notes"></textarea>
+      </div>
+      <div class="modal-action mt-4">
+        <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-rec-modal').close()">Cancel</button>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Service Record</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+function loadSummary() {
+  fetch('/api/servicing/schedules').then(r => r.json()).then(scheds => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    let overdue = 0, upcoming = 0;
+    scheds.forEach(s => {
+      if (s.next_due_date) {
+        const d = new Date(s.next_due_date + 'T00:00:00');
+        if (d < today) overdue++;
+        else {
+          const diff = Math.ceil((d - today) / (1000*60*60*24));
+          if (diff <= 30) upcoming++;
+        }
+      }
+    });
+    document.getElementById('overdue-count').textContent = overdue;
+    document.getElementById('upcoming-count').textContent = upcoming;
+  });
+  fetch('/api/servicing/records').then(r => r.json()).then(recs => {
+    const total = recs.reduce((s, r) => s + r.cost_cents, 0);
+    document.getElementById('total-cost').textContent = 'R' + (total / 100).toFixed(2);
+  });
+}
+
+function openTypeModal() {
+  document.getElementById('type-modal').showModal();
+  loadTypes();
+}
+
+function loadTypes() {
+  fetch('/api/servicing/service-types?include_inactive=true').then(r => r.json()).then(types => {
+    const container = document.getElementById('type-list');
+    container.innerHTML = types.length ? '' : '<p class="text-sm text-gray-400">No service types defined.</p>';
+    types.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'flex items-center justify-between p-2 bg-gray-50 rounded-lg';
+      div.innerHTML = `
+        <div>
+          <span class="font-medium text-sm">${t.name}</span>
+          <span class="text-xs text-gray-400 ml-2">${t.interval_km ? t.interval_km.toLocaleString() + ' km' : ''}${t.interval_days ? (t.interval_km ? ' / ' : '') + t.interval_days + ' days' : ''}</span>
+          ${!t.is_active ? '<span class="badge-modern badge-inactive text-xs ml-1">inactive</span>' : ''}
+        </div>
+        <button class="text-xs text-blue-600 hover:text-blue-800" onclick="editType('${t.id}','${t.name.replace(/'/g,"\\'")}','${(t.description||'').replace(/'/g,"\\'")}','${t.interval_km||''}','${t.interval_days||''}','${t.reminder_days_before||'7'}')">Edit</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+
+function editType(id, name, desc, intervalKm, intervalDays, reminder) {
+  document.getElementById('edit-type-id').value = id;
+  document.getElementById('type-name').value = name;
+  document.getElementById('type-desc').value = desc;
+  document.getElementById('type-interval-km').value = intervalKm;
+  document.getElementById('type-interval-days').value = intervalDays;
+  document.getElementById('type-reminder').value = reminder;
+}
+
+document.getElementById('type-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const editId = document.getElementById('edit-type-id').value;
+  const body = JSON.stringify({
+    name: document.getElementById('type-name').value,
+    description: document.getElementById('type-desc').value || null,
+    interval_km: parseInt(document.getElementById('type-interval-km').value) || null,
+    interval_days: parseInt(document.getElementById('type-interval-days').value) || null,
+    reminder_days_before: parseInt(document.getElementById('type-reminder').value) || 7,
+  });
+  const url = editId ? '/api/servicing/service-types/' + editId : '/api/servicing/service-types';
+  const method = editId ? 'PATCH' : 'POST';
+  fetch(url, {method, headers: {'Content-Type': 'application/json'}, body}).then(r => {
+    if (r.ok) {
+      document.getElementById('edit-type-id').value = '';
+      document.getElementById('type-form').reset();
+      document.getElementById('type-reminder').value = 7;
+      loadTypes();
+    } else {
+      r.json().then(d => alert(d.detail || 'Failed to save'));
+    }
+  });
+});
+
+function openAddScheduleModal() {
+  document.getElementById('add-sched-modal').showModal();
+  Promise.all([
+    fetch('/api/taxis').then(r => r.json()),
+    fetch('/api/servicing/service-types').then(r => r.json()),
+  ]).then(([taxis, types]) => {
+    const taxiSel = document.getElementById('sched-taxi');
+    taxiSel.innerHTML = '<option value="">— Select taxi —</option>';
+    taxis.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.registration_number;
+      taxiSel.appendChild(opt);
+    });
+    const typeSel = document.getElementById('sched-type');
+    typeSel.innerHTML = '<option value="">— Select type —</option>';
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.name;
+      typeSel.appendChild(opt);
+    });
+  });
+}
+
+document.getElementById('sched-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch('/api/servicing/schedules', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      taxi_id: document.getElementById('sched-taxi').value,
+      service_type_id: document.getElementById('sched-type').value,
+      last_service_date: document.getElementById('sched-last-date').value || null,
+      last_service_km: parseInt(document.getElementById('sched-last-km').value) || null,
+    }),
+  }).then(r => {
+    if (r.ok) {
+      document.getElementById('add-sched-modal').close();
+      document.getElementById('sched-form').reset();
+      htmx.trigger('#sched-list tbody', 'load');
+      loadSummary();
+    } else {
+      r.json().then(d => alert(d.detail || 'Failed to add schedule'));
+    }
+  });
+});
+
+function openAddRecordModal() {
+  document.getElementById('add-rec-modal').showModal();
+  document.getElementById('rec-date').value = new Date().toISOString().split('T')[0];
+  Promise.all([
+    fetch('/api/taxis').then(r => r.json()),
+    fetch('/api/servicing/service-types').then(r => r.json()),
+    fetch('/api/servicing/schedules').then(r => r.json()),
+  ]).then(([taxis, types, scheds]) => {
+    const taxiSel = document.getElementById('rec-taxi');
+    taxiSel.innerHTML = '<option value="">— Select taxi —</option>';
+    taxis.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.registration_number;
+      taxiSel.appendChild(opt);
+    });
+    const typeSel = document.getElementById('rec-type');
+    typeSel.innerHTML = '<option value="">— Select type —</option>';
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.name;
+      typeSel.appendChild(opt);
+    });
+    const schedSel = document.getElementById('rec-sched');
+    schedSel.innerHTML = '<option value="">— None —</option>';
+    scheds.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.registration_number + ' — ' + s.service_type_name;
+      schedSel.appendChild(opt);
+    });
+  });
+}
+
+document.getElementById('rec-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch('/api/servicing/records', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      taxi_id: document.getElementById('rec-taxi').value,
+      service_type_id: document.getElementById('rec-type').value,
+      schedule_id: document.getElementById('rec-sched').value || null,
+      service_date: document.getElementById('rec-date').value,
+      odometer_km: parseInt(document.getElementById('rec-odometer').value) || null,
+      cost_cents: parseInt(document.getElementById('rec-cost').value),
+      vendor: document.getElementById('rec-vendor').value || null,
+      notes: document.getElementById('rec-notes').value || null,
+    }),
+  }).then(r => {
+    if (r.ok) {
+      document.getElementById('add-rec-modal').close();
+      document.getElementById('rec-form').reset();
+      htmx.trigger('#rec-list tbody', 'load');
+      htmx.trigger('#sched-list tbody', 'load');
+      loadSummary();
+    } else {
+      r.json().then(d => alert(d.detail || 'Failed to save'));
+    }
+  });
+});
+
+function loadRecords() {
+  const taxiId = document.getElementById('filter-taxi').value;
+  const url = '/partials/servicing/records' + (taxiId ? '?taxi_id=' + taxiId : '');
+  htmx.ajax('GET', url, {target: '#rec-list tbody', swap: 'innerHTML'});
+}
+
+loadSummary();
+</script>
+{% endblock %}

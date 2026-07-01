@@ -1,0 +1,20 @@
+{% if recs %}
+{% for r in recs %}
+<tr>
+  <td>{{ r.service_date }}</td>
+  <td class="font-medium">{{ r.registration_number }}</td>
+  <td>{{ r.service_type_name }}</td>
+  <td>{{ r.odometer_km|default('—', True) }}</td>
+  <td>R{{ "%.2f"|format(r.cost_cents / 100) }}</td>
+  <td>{{ r.vendor or '—' }}</td>
+  <td class="max-w-xs truncate">{{ r.notes or '—' }}</td>
+  <td>
+    {% if user.role in ["owner", "dispatcher"] %}
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="editRecord('{{ r.id }}','{{ r.service_date }}','{{ r.odometer_km or '' }}','{{ r.cost_cents }}','{{ (r.vendor or '').replace("'","\\'") }}','{{ (r.notes or '').replace("'","\\'") }}')">Edit</button>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="8" class="text-center text-gray-400 py-8">No service records yet.</td></tr>
+{% endif %}

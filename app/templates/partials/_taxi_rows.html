@@ -6,12 +6,21 @@
   <td><span class="badge-modern {% if taxi.status == 'active' %}badge-active{% elif taxi.status == 'breakdown' %}badge-breakdown{% else %}badge-inactive{% endif %}">{{ taxi.status }}</span></td>
   <td>{{ route_map.get(taxi.assigned_route_id, '—') }}</td>
   <td>
+    {% if taxi.license_disk_expiry %}
+    <span class="text-xs {% if taxi.license_disk_expiry < today %}text-red-600{% else %}text-green-600{% endif %}">
+      {{ taxi.license_disk_number or '—' }} (exp {{ taxi.license_disk_expiry }})
+    </span>
+    {% else %}
+    <span class="text-xs text-gray-400">—</span>
+    {% endif %}
+  </td>
+  <td>
     {% if user.role in ["owner", "dispatcher"] %}
-    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditTaxiModal('{{ taxi.id }}', '{{ taxi.registration_number }}', '{{ taxi.model }}', '{{ taxi.status }}', '{{ taxi.assigned_route_id or '' }}')">Edit</button>
+    <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" onclick="openEditTaxiModal('{{ taxi.id }}', '{{ taxi.registration_number }}', '{{ taxi.model }}', '{{ taxi.status }}', '{{ taxi.assigned_route_id or '' }}', '{{ taxi.license_disk_number or '' }}', '{{ taxi.license_disk_expiry or '' }}')">Edit</button>
     {% endif %}
   </td>
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="5" class="text-center text-gray-400 py-8">No taxis yet. Add your first taxi above.</td></tr>
+<tr><td colspan="6" class="text-center text-gray-400 py-8">No taxis yet. Add your first taxi above.</td></tr>
 {% endif %}

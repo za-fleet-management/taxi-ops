@@ -22,6 +22,7 @@ from app.api.users import router as users_router
 from app.api.admin import router as admin_router
 from app.api.organisation import router as organisation_router
 from app.api.seed import router as seed_router
+from app.api.servicing import router as servicing_router
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth_router)
@@ -46,3 +47,4 @@ api_router.include_router(subscriptions_router)
 api_router.include_router(admin_router)
 api_router.include_router(organisation_router)
 api_router.include_router(seed_router)
+api_router.include_router(servicing_router)

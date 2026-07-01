@@ -45,6 +45,8 @@ def create_taxi(
         model=body.model,
         status=body.status,
         assigned_route_id=body.assigned_route_id,
+        license_disk_number=body.license_disk_number,
+        license_disk_expiry=body.license_disk_expiry,
     )
     db.add(taxi)
     db.commit()
@@ -78,6 +80,14 @@ def update_taxi(
         taxi.status = body.status
     if body.assigned_route_id is not None or "assigned_route_id" in body.model_fields_set:
         taxi.assigned_route_id = body.assigned_route_id
+    if body.license_disk_number is not None:
+        taxi.license_disk_number = body.license_disk_number
+    if body.license_disk_expiry is not None:
+        taxi.license_disk_expiry = body.license_disk_expiry
+    if "license_disk_number" in body.model_fields_set and body.license_disk_number is None:
+        taxi.license_disk_number = None
+    if "license_disk_expiry" in body.model_fields_set and body.license_disk_expiry is None:
+        taxi.license_disk_expiry = None
     db.commit()
     db.refresh(taxi)
     return taxi

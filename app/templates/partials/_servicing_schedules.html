@@ -1,0 +1,36 @@
+{% if scheds %}
+{% for s in scheds %}
+<tr>
+  <td class="font-medium">{{ s.registration_number }}</td>
+  <td>{{ s.service_type_name }}</td>
+  <td>{{ s.last_service_date or '—' }}</td>
+  <td>{{ s.last_service_km|default('—', True) }}</td>
+  <td>
+    {% if s.next_due_date %}
+    <span class="{% if s.next_due_date < today %}text-red-600 font-semibold{% else %}text-gray-900{% endif %}">
+      {{ s.next_due_date }}
+    </span>
+    {% else %}
+    —
+    {% endif %}
+  </td>
+  <td>{{ s.next_due_km|default('—', True) }}</td>
+  <td>
+    {% if s.next_due_date and s.next_due_date < today %}
+    <span class="badge-modern badge-breakdown">Overdue</span>
+    {% elif s.next_due_date %}
+    <span class="badge-modern badge-active">On Track</span>
+    {% else %}
+    <span class="badge-modern badge-inactive">No Schedule</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if user.role in ["owner", "dispatcher"] %}
+    <button class="text-sm text-red-600 hover:text-red-800 font-medium" onclick="deleteSchedule('{{ s.id }}')">Remove</button>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="8" class="text-center text-gray-400 py-8">No service schedules yet.</td></tr>
+{% endif %}

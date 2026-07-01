@@ -25,6 +25,14 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
         <input type="text" id="model" class="input-modern" placeholder="e.g. Toyota Hiace" required>
       </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">License disk number</label>
+        <input type="text" id="license-disk-number" class="input-modern" placeholder="e.g. ZA2026001234">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">License disk expiry</label>
+        <input type="date" id="license-disk-expiry" class="input-modern">
+      </div>
       <div class="modal-action mt-6">
         <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('add-modal').close()">Cancel</button>
         <button type="submit" class="btn-modern btn-primary-modern">Save Taxi</button>
@@ -39,6 +47,8 @@
         body: JSON.stringify({
           registration_number: document.getElementById('reg').value,
           model: document.getElementById('model').value,
+          license_disk_number: document.getElementById('license-disk-number').value || null,
+          license_disk_expiry: document.getElementById('license-disk-expiry').value || null,
         }),
       }).then(r => {
         if (r.ok) {
@@ -84,18 +94,28 @@
           {% endfor %}
         </select>
       </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">License disk number</label>
+        <input type="text" id="edit-taxi-license-number" class="input-modern" placeholder="e.g. ZA2026001234">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">License disk expiry</label>
+        <input type="date" id="edit-taxi-license-expiry" class="input-modern">
+      </div>
       <div class="modal-action mt-6">
         <button type="button" class="btn-modern btn-ghost-modern" onclick="document.getElementById('edit-taxi-modal').close()">Cancel</button>
         <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
       </div>
     </form>
     <script>
-    function openEditTaxiModal(taxiId, reg, model, status, routeId) {
+    function openEditTaxiModal(taxiId, reg, model, status, routeId, licenseNumber, licenseExpiry) {
       document.getElementById('edit-taxi-id').value = taxiId;
       document.getElementById('edit-taxi-reg').value = reg;
       document.getElementById('edit-taxi-model').value = model;
       document.getElementById('edit-taxi-status').value = status;
       document.getElementById('edit-taxi-route').value = routeId;
+      document.getElementById('edit-taxi-license-number').value = licenseNumber || '';
+      document.getElementById('edit-taxi-license-expiry').value = licenseExpiry || '';
       document.getElementById('edit-taxi-modal').showModal();
     }
     document.getElementById('edit-taxi-form').addEventListener('submit', function(e) {
@@ -110,6 +130,8 @@
           model: document.getElementById('edit-taxi-model').value,
           status: document.getElementById('edit-taxi-status').value,
           assigned_route_id: routeVal || null,
+          license_disk_number: document.getElementById('edit-taxi-license-number').value || null,
+          license_disk_expiry: document.getElementById('edit-taxi-license-expiry').value || null,
         }),
       }).then(r => r.json()).then(data => {
         if (data.id) {
@@ -134,6 +156,7 @@
           <th>Model</th>
           <th>Status</th>
           <th>Route</th>
+          <th>License Disk</th>
           <th>Actions</th>
         </tr>
       </thead>

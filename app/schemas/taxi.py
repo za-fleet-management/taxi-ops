@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -8,6 +8,8 @@ class TaxiCreate(BaseModel):
     model: str = Field(..., min_length=1, max_length=255)
     status: str = Field(default="active", pattern="^(active|breakdown|retired)$")
     assigned_route_id: str | None = None
+    license_disk_number: str | None = Field(None, max_length=100)
+    license_disk_expiry: date | None = None
 
 
 class TaxiUpdate(BaseModel):
@@ -15,6 +17,8 @@ class TaxiUpdate(BaseModel):
     model: str | None = Field(None, min_length=1, max_length=255)
     status: str | None = Field(None, pattern="^(active|breakdown|retired)$")
     assigned_route_id: str | None = None
+    license_disk_number: str | None = Field(None, max_length=100)
+    license_disk_expiry: date | None = None
 
 
 class TaxiResponse(BaseModel):
@@ -26,4 +30,6 @@ class TaxiResponse(BaseModel):
     model: str
     status: str
     assigned_route_id: str | None
+    license_disk_number: str | None
+    license_disk_expiry: date | None
     created_at: datetime

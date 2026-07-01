@@ -16,6 +16,7 @@ from app.models.insurance import Insurance
 from app.models.taxi_loan import TaxiLoan, LoanPayment
 from app.models.spare_part import SparePartPurchase
 from app.models.mechanic_payment import MechanicPayment
+from app.models.service import ServiceRecord, ServiceType, TaxiServiceSchedule
 from app.models.subscription import OrganisationSubscription, SubscriptionPayment
 from app.models.audit_log import AuditLog
 from app.models.notification import Notification
@@ -26,6 +27,7 @@ __all__ = [
     "RemunerationPackage", "Employee", "SalaryPayment",
     "Depot", "Insurance", "TaxiLoan", "LoanPayment",
     "SparePartPurchase", "MechanicPayment",
+    "ServiceType", "TaxiServiceSchedule", "ServiceRecord",
     "OrganisationSubscription", "SubscriptionPayment",
     "AuditLog", "Notification",
 ]
